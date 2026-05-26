@@ -2,7 +2,7 @@
 
 **Modernized OpenWPM-based framework for large-scale, ethical measurement of Header Bidding (HB), Real-Time Bidding (RTB), and Prebid.js auction dynamics.**
 
-> **Documentation Index**: See the [full curated documentation table](#documentation-index) at the bottom of this file.
+> **Documentation Set**: See the full curated documentation table below.
 
 
 
@@ -186,30 +186,7 @@ Detailed component responsibilities, data flows, security boundaries, and Mermai
 
 ---
 
-## Documentation Set
 
-All documentation follows enterprise standards for secure research systems.
-
-**Core Technical Documentation** (in `docs/`):
-
-- [Architecture.md](docs/Architecture.md) – System design, component boundaries, data flows, Mermaid diagrams
-- [Security-Hardening.md](docs/Security-Hardening.md) – OWASP ASVS, NIST CSF, Zero Trust controls, privileged extension hardening, AI-agent orchestration guidelines, audit logging requirements
-- [Build-Process.md](docs/Build-Process.md) – Reproducible builds, extension compilation, dependency pinning, SBOM generation
-- [Configuration.md](docs/Configuration.md) – ManagerParams / BrowserParams, instrumentation settings, profile hardening
-- [Deployment.md](docs/Deployment.md) – Container, Kubernetes, air-gap, and cluster deployment patterns
-- [Troubleshooting.md](docs/Troubleshooting.md) – Common failure modes, debugging instruments, crash recovery
-
-**Governance & Operations** (repository root):
-
-- [docs/SECURITY.md](docs/SECURITY.md) – Vulnerability reporting, supported versions, disclosure policy
-- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) – Secure contribution process, review requirements
-- [docs/AI-Agent-Context.md](docs/AI-Agent-Context.md) – Central machine-readable context for AI coding agents (security rules, allowed operations, testing mandates)
-- [docs/AGENTS.md](docs/AGENTS.md) – Operational guidance for AI coding agents (build commands, known issues)
-- [docs/Security-and-Privacy.md](docs/Security-and-Privacy.md) – Existing threat model (complementary to the new hardening guide)
-
-Additional Sphinx documentation (API, schemas, papers) is available under `docs/`.
-
----
 
 ## Development & Testing
 
@@ -247,7 +224,7 @@ This platform is derived from OpenWPM, originally developed by the Princeton Uni
 **Maintained for research transparency, reproducibility, and responsible disclosure of ad-tech measurement risks. Not for operational or commercial use without major remediation.**
 
 For questions on responsible use or the modernization program, open an issue with the `security` or `modernization` label.
-## Documentation Index
+## Documentation Set
 
 | Document | Location | Description |
 |----------|----------|-------------|
