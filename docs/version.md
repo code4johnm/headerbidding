@@ -1,9 +1,9 @@
 # OpenWPM-MAGA Versioning
 
-**Document Version:** 1.0  
+**Document Version:** 1.2  
 **Base Upstream Version:** 0.34.0  
-**Fork Name:** OpenWPM-MAGA  
-**Last Updated:** 2025-05
+**Fork Name:** headerbidding (OpenWPM-MAGA)  
+**Last Updated:** 2026-04-26
 
 ---
 
@@ -11,10 +11,11 @@
 
 This document describes the versioning approach for the **OpenWPM-MAGA** fork of [OpenWPM](https://github.com/openwpm/OpenWPM).
 
-OpenWPM-MAGA is a maintained distribution focused on:
-- High-quality, professional documentation following industry security and research standards (OWASP, NIST CSF, SSDL).
-- Targeted robustness and reliability improvements.
-- Operational excellence for privacy measurement research.
+headerbidding (OpenWPM-MAGA) is a maintained distribution focused on:
+- High-quality, professional, and well-organized documentation following industry security and research standards (OWASP, NIST CSF, SSDL, Zero Trust).
+- Documentation centralization, Mermaid diagram compatibility, and removal of machine-specific references.
+- Practical modernization of installation and build processes.
+- Operational excellence and security guidance for privacy measurement research.
 
 ## Base Version
 
@@ -34,31 +35,40 @@ For day-to-day development, the root `VERSION` file continues to reflect the ups
 
 ## Major Changes in the OpenWPM-MAGA Fork
 
-### Documentation Overhaul (Primary Focus)
+### Documentation Overhaul and Organization (Major Focus)
 
-A complete professional documentation suite was added or significantly modernized, following current best practices for secure, auditable, research-grade open source software:
+A comprehensive documentation modernization and organization effort was completed:
 
-- **README.md** — Completely rewritten with security-first design, clear structure, and prominent links to new security and architecture documentation.
-- **docs/Architecture.md** (new canonical document) — Comprehensive architecture reference with Mermaid diagrams covering the process model, data flows, command lifecycle, storage providers, and extensibility points.
-- **docs/Security-and-Privacy.md** (new) — Full threat model (STRIDE-inspired), data sensitivity classification table, privileged WebExtension attack surface analysis, OWASP Top 10 / ASVS / NIST CSF / SSDL alignment, operational security guidance, and responsible disclosure process.
-- **docs/SECURITY.md** (moved to docs/) — Formal vulnerability disclosure policy, supported versions, reporting channels, and scope.
-- **Dedicated Guides** (all new):
-  - `docs/Installation-Guide.md`
-  - `docs/Usage-Guide.md`
-  - `docs/Deployment.md`
-  - `docs/Development.md`
-  - `docs/Troubleshooting.md`
-- **Enhanced existing docs**:
-  - `docs/Configuration.md` — Added "Security and Privacy Implications of Configuration" section.
-  - `docs/CONTRIBUTING.md` — Added explicit security and privacy responsibilities for contributors.
-- **CHANGELOG.md** — Added structured "Unreleased" section tracking fork changes.
+**Documentation Structure Improvements**
+- All top-level `.md` documentation files (except README.md) were moved into `docs/` for better organization and maintainability (`AGENTS.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `CLAUDE.md`, `SECURITY.md`, `CONTRIBUTING.md`, `AI-Agent-Context.md`).
+- A curated **Documentation Index** table was added to README.md listing all major documents with name, location, and description columns.
+- All machine-specific absolute paths (`/mnt/5TB/git/hb-update/...`) were removed from documentation and replaced with clean relative paths.
 
-All new and updated documentation emphasizes:
-- Security hardening
-- Data privacy and sensitivity classification
-- Reproducibility
-- Configuration management
-- Traceability
+**Documentation Quality & Rendering Fixes**
+- Major improvements to Mermaid diagrams in `docs/Architecture.md`:
+  - Replaced non-rendering `C4Context` syntax with standard Mermaid flowcharts.
+  - Fixed `\n` line breaks (replaced with `<br/>`).
+  - Removed `classDef` styling and inner `direction` directives that caused GitHub rendering failures.
+- Added a proper text-based legend for trust levels in architecture diagrams.
+- Bumped document versions across the suite to 1.2.0.
+
+**New and Significantly Updated Documents**
+- `docs/Security-Hardening.md` — New comprehensive guide covering OWASP Top 10, NIST CSF, Zero Trust for research workloads, privileged extension security, AI agent integration risks, and a prioritized hardening checklist.
+- `docs/AI-Agent-Context.md` — New strict rule set and context file for AI coding agents.
+- `docs/Build-Process.md`, `docs/Deployment.md`, `docs/Troubleshooting.md` — New or heavily expanded operational guides.
+- `README.md` — Complete rewrite with modern quick start, toolchain information, and security warnings.
+- `docs/Architecture.md` — Significantly expanded with multiple diagrams and trust boundary analysis.
+- `docs/SECURITY.md` and `docs/CONTRIBUTING.md` — Updated and moved into docs/.
+
+**Install Script & Toolchain Modernization**
+- Removed dangerous legacy Adobe Flash installation logic (Ubuntu 14.04 "trusty" repositories).
+- Modernized `install.sh`, `install-dev.sh`, and `install-mac-dev.sh` to prefer the conda + `scripts/install-firefox.sh` path.
+- Updated documentation and scripts to target current Firefox (150+) instead of legacy Firefox 52.
+
+**Project Identity Normalization**
+- Internal references updated from "hb-update" to "headerbidding" for consistency with the project's canonical name while preserving local directory structure.
+
+All documentation now follows consistent professional standards with version numbers, dates, security considerations, and cross-references.
 
 ### Code Improvements and Bug Fixes
 
@@ -74,9 +84,10 @@ These changes are documented in the [CHANGELOG.md](../CHANGELOG.md) under the "U
 
 ### Other Fork Characteristics
 
-- Strong emphasis on documentation quality as a first-class deliverable.
-- Accumulation of practical robustness fixes that improve the day-to-day reliability of the measurement platform in research and CI environments.
-- All documentation follows a consistent professional style with version/date stamps, clear security/privacy callouts, and cross-references.
+- **Documentation as a first-class deliverable**: The majority of meaningful work in this fork has been in creating and maintaining high-quality, secure, auditable documentation (including architecture diagrams, security hardening guides, AI agent context files, and operational playbooks).
+- Strong focus on documentation organization, including centralizing files under `docs/`, creating a Documentation Index, removing machine-specific paths, and ensuring diagrams render correctly on GitHub.
+- Practical modernization of installation and build tooling (removal of Flash support, preference for conda + modern Firefox installer).
+- All documentation follows a consistent professional style with version/date stamps, security considerations, and cross-references.
 
 ## Future Versioning
 
@@ -84,8 +95,10 @@ When preparing a release or significant update from this fork:
 
 1. Update the root `VERSION` file if a new fork patch version is being cut.
 2. Add a dated entry under the appropriate section in `CHANGELOG.md`.
-3. Update this `docs/version.md` file with a summary of new changes.
+3. Update this `docs/version.md` file with a summary of new changes (especially documentation, security, and toolchain work).
 4. Consider tagging with a fork-specific suffix (e.g., `v0.34.0-maga.1`).
+
+Documentation and process improvements are considered first-class changes and may warrant a fork version bump on their own.
 
 ## Relationship to Upstream
 

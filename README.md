@@ -271,7 +271,8 @@ For questions on responsible use or the modernization program, open an issue wit
 | Troubleshooting.md | `docs/Troubleshooting.md` | Common issues, debugging steps, and recovery procedures. |
 | Usage-Guide.md | `docs/Usage-Guide.md` | Detailed usage patterns for experiments and header bidding research. |
 | Using_OpenWPM.md | `docs/Using_OpenWPM.md` | Guide for using the core OpenWPM functionality. |
+| version.md | `docs/version.md` | Versioning policy and fork versioning information for the project. |
 | CHANGELOG.md | `docs/CHANGELOG.md` | Project changelog. |
 | CODE_OF_CONDUCT.md | `docs/CODE_OF_CONDUCT.md` | Contributor Covenant code of conduct. |
 | CLAUDE.md | `docs/CLAUDE.md` | Symlink to AGENTS.md for Claude and other AI tools. |
-| JSON Schema Documentation | `docs/schemas/` | Auto-generated detailed documentation for the JavaScript instrumentation settings schema. |
+| JSON Schema Documentation | `docs/schemas/` | Auto-generated detailed documentation for the JavaScript instrumentation settings schema (including individual setting object docs). |
