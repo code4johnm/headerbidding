@@ -33,7 +33,7 @@ All new development must occur in the modern core. Legacy components are schedul
 
 ---
 
-## 2. System Context (C4-Style)
+## 2. System Context
 
 ```mermaid
 flowchart TB
@@ -112,16 +112,13 @@ flowchart TB
     TP -->|bid harvesting<br/>via execute_script| FF
     FF -->|raw pbjs objects| TP
     TP -->|JSON state machines| HBJSON
-
-    classDef untrusted fill:#ffebee,stroke:#c62828
-    classDef measurement fill:#fff8e1,stroke:#f57c00
-    classDef trusted fill:#e8f5e9,stroke:#2e7d32
-    classDef legacy fill:#fce4ec,stroke:#ad1457
-    class SITES untrusted
-    class FF,PRIV,Extension measurement
-    class TM,BM,SC trusted
-    class TP,HBJSON legacy
 ```
+
+**Legend (Trust Levels)**:
+- Red border = External/Untrusted
+- Orange border = High-privilege Measurement Boundary
+- Green border = Trusted Orchestration & Storage
+- Pink border = Legacy (Transitioning)
 
 **Trust Boundaries** (critical for Zero Trust):
 
@@ -208,9 +205,6 @@ flowchart LR
     SC -->|schema validation| PARQUET[Parquet<br/>site_visits, http_requests,<br/>javascript, cookies]
     SC -->|optional| REDACT[Redaction Pipeline<br/>(PII, bodies, high-entropy)]
     REDACT --> CLOUD[(S3/GCS<br/>encrypted buckets)]
-
-    classDef sensitive fill:#ffcdd2
-    class PBJS,SENS sensitive
 ```
 
 ### 5.2 Header Bidding Harvest Flow (Legacy Path)

@@ -251,7 +251,7 @@ For questions on responsible use or the modernization program, open an issue wit
 
 | Document | Location | Description |
 |----------|----------|-------------|
-| README.md | `/mnt/5TB/git/hb-update/README.md` | Main project overview, security warnings, quick start, and high-level features. |
+| README.md | `README.md` | Main project overview, security warnings, quick start, and high-level features. |
 | AGENTS.md | `docs/AGENTS.md` | Guidance for AI coding agents (build commands, architecture notes, known issues). |
 | AI-Agent-Context.md | `docs/AI-Agent-Context.md` | Strict rules and context file specifically for AI coding agents and LLMs working on the codebase. |
 | Architecture.md | `docs/Architecture.md` | Detailed system architecture with Mermaid diagrams, trust boundaries, data flows, and component responsibilities. |
