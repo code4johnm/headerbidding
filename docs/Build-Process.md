@@ -1,6 +1,6 @@
 # Build Process & Supply Chain Security
 
-**hb-update: Header Bidding Research Platform**  
+**headerbidding: Header Bidding Research Platform**  
 **Version**: 1.1.0  
 **Date**: 2026-04-26  
 **Standards**: SLSA-inspired, NIST SSDF, OWASP Dependency-Track principles, reproducible builds.
@@ -112,10 +112,10 @@ The install scripts also handle geckodriver and legacy Firefox profile setup. Th
 
 ```bash
 # Multi-stage, non-root, pinned base
-docker build --target runtime -t hb-update:0.8.0-hb --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) .
+docker build --target runtime -t headerbidding:0.8.0-hb --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) .
 
 # Attestation (future)
-cosign sign --yes hb-update:0.8.0-hb
+cosign sign --yes headerbidding:0.8.0-hb
 ```
 
 **Required Improvements** (see Security-Hardening.md):

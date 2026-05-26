@@ -1,4 +1,4 @@
-# hb-update: Header Bidding Research Platform
+# headerbidding: Header Bidding Research Platform
 
 **Modernized OpenWPM-based framework for large-scale, ethical measurement of Header Bidding (HB), Real-Time Bidding (RTB), and Prebid.js auction dynamics.**
 
@@ -46,7 +46,7 @@ See [docs/Security-Hardening.md](docs/Security-Hardening.md) and [docs/SECURITY.
 
 ## Overview
 
-`hb-update` is the active modernization effort for a specialized research fork of the [OpenWPM](https://github.com/openwpm/OpenWPM) web privacy measurement framework. It adds deep instrumentation and harvesting for header bidding / Prebid.js auction dynamics while preserving the core strengths of OpenWPM: parallel browser orchestration, comprehensive HTTP/JS/cookie telemetry, and multiple storage backends.
+`headerbidding` is the active modernization effort for a specialized research fork of the [OpenWPM](https://github.com/openwpm/OpenWPM) web privacy measurement framework. It adds deep instrumentation and harvesting for header bidding / Prebid.js auction dynamics while preserving the core strengths of OpenWPM: parallel browser orchestration, comprehensive HTTP/JS/cookie telemetry, and multiple storage backends.
 
 **Modern Core (Recommended)**:
 - `openwpm/` – Python 3.10+ package (TaskManager, BrowserManager, command system, storage providers for SQLite/Parquet/S3/GCS/LevelDB).
@@ -87,8 +87,8 @@ Full instrumentation settings: [docs/Configuration.md](docs/Configuration.md) an
 - Current Firefox + geckodriver (installed via `./install.sh`)
 
 ```bash
-git clone <repository-url> hb-update
-cd hb-update
+git clone <repository-url> headerbidding
+cd headerbidding
 ./install.sh                 # Creates conda env "openwpm", builds Extension, installs Firefox
 conda activate openwpm
 ```

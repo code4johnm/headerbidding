@@ -1,6 +1,6 @@
 # Security Policy
 
-**hb-update: Header Bidding Research Platform (Modernized OpenWPM)**  
+**headerbidding: Header Bidding Research Platform (Modernized OpenWPM)**  
 **Version**: 1.1.0  
 **Date**: 2026-04-26  
 **Last Reviewed**: 2026-04-26  
@@ -15,7 +15,7 @@
 | Version                  | Support Level                          | Notes |
 |--------------------------|----------------------------------------|-------|
 | 1.1.0 (current)          | Full security review + modernization   | Documentation centralization + path cleanup |
-| 0.8.0-hb-update          | Security fixes only                    | Legacy research snapshot |
+| 0.8.0 (headerbidding)    | Security fixes only                    | Legacy research snapshot |
 | Older / pre-modernization| Critical issues only                   | Strongly recommend migration |
 | Legacy OpenWPM (Firefox 52) | None                                | Unpatchable vulnerabilities |
 
@@ -28,7 +28,7 @@
 ### 2.1 Preferred Channels (in order)
 
 1. **GitHub Private Security Advisory** (if the repository has the feature enabled) — best for coordinated handling.
-2. **Email** to the current maintainers with subject prefix `[SECURITY] [hb-update]`.
+2. **Email** to the current maintainers with subject prefix `[SECURITY] [headerbidding]`.
 3. **Encrypted email** (PGP key published in repository or institutional directory) for high-severity issues.
 
 ### 2.2 Required Information in Report

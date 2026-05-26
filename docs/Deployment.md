@@ -1,6 +1,6 @@
 # Deployment Guide
 
-**hb-update: Header Bidding Research Platform**  
+**headerbidding: Header Bidding Research Platform**  
 **Version**: 1.1.0  
 **Date**: 2026-04-26  
 **Full Path**: `docs/Deployment.md`
@@ -55,9 +55,9 @@ FROM ubuntu:22.04 AS base
 
 # Create non-root user early
 RUN useradd -m -u 10001 -s /bin/bash researcher && \
-    mkdir -p /opt/hb-update && chown researcher:researcher /opt/hb-update
+    mkdir -p /opt/headerbidding && chown researcher:researcher /opt/headerbidding
 
-WORKDIR /opt/hb-update
+WORKDIR /opt/headerbidding
 USER researcher
 
 # Copy only what is needed (after modernized install)
@@ -79,7 +79,7 @@ docker run --rm \
   --cap-drop=ALL \
   --network=research-net \
   -v /secure/research/datadir:/datadir:ro \
-  hb-update:0.8.0-hb \
+  headerbidding:0.8.0-hb \
   python -m your_experiment --headless
 ```
 

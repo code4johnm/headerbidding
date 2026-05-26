@@ -1,6 +1,6 @@
 # Security Hardening Guide
 
-**hb-update: Header Bidding Research Platform**  
+**headerbidding: Header Bidding Research Platform**  
 **Document Version**: 1.1.0  
 **Date**: 2026-04-26  
 **Classification**: Public (controlled disclosure for sensitive implementation details)  
@@ -13,7 +13,7 @@
 
 ## 1. Executive Summary & Current Security Posture
 
-The hb-update platform is a **high-privilege, high-sensitivity research instrument**. It intentionally operates with elevated browser privileges to achieve measurement goals that standard web crawlers cannot. This design creates an intrinsic tension between research utility and security.
+The headerbidding platform is a **high-privilege, high-sensitivity research instrument**. It intentionally operates with elevated browser privileges to achieve measurement goals that standard web crawlers cannot. This design creates an intrinsic tension between research utility and security.
 
 **Current Posture Assessment (2026-04)**: **High Risk – Suitable only for hardened, isolated research deployments after implementing controls in this document.**
 

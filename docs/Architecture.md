@@ -1,6 +1,6 @@
 # Architecture Specification
 
-**hb-update: Header Bidding Research Platform**  
+**headerbidding: Header Bidding Research Platform**  
 **Document Version**: 1.1.0  
 **Date**: 2026-04-26  
 **Status**: Authoritative technical architecture for the modernized platform  
@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary & Architectural Principles
 
-hb-update is a **distributed, multi-process research measurement platform** specialized for deep instrumentation of web advertising auctions (Header Bidding / Prebid.js) while retaining the general web privacy measurement capabilities of its OpenWPM foundation.
+headerbidding is a **distributed, multi-process research measurement platform** specialized for deep instrumentation of web advertising auctions (Header Bidding / Prebid.js) while retaining the general web privacy measurement capabilities of its OpenWPM foundation.
 
 **Core Design Goals**:
 - **Maximum observability** of HTTP, JavaScript execution, cookies, DNS, and real-time bidding telemetry.
@@ -37,10 +37,10 @@ All new development must occur in the modern core. Legacy components are schedul
 
 ```mermaid
 C4Context
-    title System Context - hb-update Research Platform
+    title System Context - headerbidding Research Platform
 
     Person(researcher, "Researcher / AI Agent", "Defines experiments, allow-lists, and purpose tags")
-    System_Boundary(platform, "hb-update Platform") {
+    System_Boundary(platform, "headerbidding Platform") {
         System(taskmanager, "TaskManager + StorageController", "Orchestration & data plane")
         System_Ext(firefox, "Instrumented Firefox\n+ Privileged Extension", "Measurement boundary")
     }

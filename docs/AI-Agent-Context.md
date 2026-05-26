@@ -1,6 +1,6 @@
 # AI-Agent-Context.md
 
-**hb-update: Header Bidding Research Platform**  
+**headerbidding: Header Bidding Research Platform**  
 **Version**: 1.1.0  
 **Date**: 2026-04-26  
 **Purpose**: Primary machine-readable and human-readable context file for AI coding agents, LLMs, and autonomous research tools interacting with this repository.  
@@ -12,7 +12,7 @@
 
 ## 1. Project Identity & Constraints
 
-- **Name**: hb-update (Header Bidding Research Platform modernization of OpenWPM)
+- **Name**: headerbidding (Header Bidding Research Platform modernization of OpenWPM)
 - **Core Nature**: High-privilege web measurement and ad-tech telemetry platform. Not a general web application, not an AI system itself.
 - **Primary Risk**: The privileged Firefox WebExtension (`Extension/`) combined with the ability to execute arbitrary researcher or page-influenced JavaScript in a high-privilege context.
 - **Current State**: Hybrid — modern `openwpm/` + TypeScript Extension core + legacy `TrackerProject/` with known liabilities.
