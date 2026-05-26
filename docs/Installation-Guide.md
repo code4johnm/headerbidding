@@ -54,7 +54,7 @@ cd headerbidding
 # Review the script first – it will add Canonical partner repos and download Firefox 52
 less install.sh
 
-# Non-interactive (no Flash)
+# Non-interactive (recommended)
 ./install.sh --no-flash
 ```
 

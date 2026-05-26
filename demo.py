@@ -17,8 +17,8 @@ manager_params, browser_params = TaskManager.load_default_params(NUM_BROWSERS)
 for i in range(NUM_BROWSERS):
     # Record HTTP Requests and Responses
     browser_params[i]['http_instrument'] = True
-    # Enable flash for all three browsers
-    browser_params[i]['disable_flash'] = False
+    # Flash is obsolete and disabled by default in modern OpenWPM
+    # browser_params[i]['disable_flash'] = False   # no longer relevant
 browser_params[0]['headless'] = True  # Launch only browser 0 headless
 
 # Update TaskManager configuration (use this for crawl-wide settings)

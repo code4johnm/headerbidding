@@ -2,60 +2,59 @@
 set -e
 
 if [[ $# -gt 1 ]]; then
-    echo "Usage: install.sh [--flash | --no-flash]" >&2
+    echo "Usage: install.sh [--no-flash]" >&2
+    echo "Note: --flash is deprecated and ignored (Adobe Flash is obsolete)." >&2
     exit 1
 fi
 
 if [[ $# -gt 0 ]]; then
     case "$1" in
         "--flash")
-            flash=true
+            echo "Warning: --flash is deprecated (Adobe Flash is obsolete) and will be ignored."
+            flash=false
             ;;
         "--no-flash")
             flash=false
             ;;
         *)
-            echo "Usage: install.sh [--flash | --no-flash]" >&2
+            echo "Usage: install.sh [--no-flash]" >&2
+            echo "Note: --flash is deprecated and ignored." >&2
             exit 1
             ;;
     esac
 else
-    echo "Would you like to install Adobe Flash Player? (Only required for crawls with Flash) [y,N]"
-    read -s -n 1 response
-    if [[ $response = "" ]] || [ $response == 'n' ] || [ $response == 'N' ]; then
-        flash=false
-        echo Not installing Adobe Flash Plugin
-    elif [ $response == 'y' ] || [ $response == 'Y' ]; then
-        flash=true
-        echo Installing Adobe Flash Plugin
-    else
-        echo Unrecognized response, exiting
-        exit 1
-    fi
+    # Flash is obsolete. Default to not installing it.
+    flash=false
+    echo "Adobe Flash is no longer supported (EOL 2020). Skipping Flash installation."
 fi
 
+# ===================================================================
+# FLASH SUPPORT HAS BEEN REMOVED
+# Adobe Flash reached end-of-life in December 2020. It is not supported
+# by any modern browser and is not required for header bidding / Prebid.js
+# research.
+#
+# The --flash option is kept only for backward compatibility with old
+# scripts. Requesting Flash will now print a warning and be ignored.
+# ===================================================================
 if [ "$flash" = true ]; then
-    sudo sh -c 'echo "deb http://archive.canonical.com/ubuntu/ trusty partner" >> /etc/apt/sources.list.d/canonical_partner.list'
-fi
-sudo apt-get update
-
-sudo apt-get install -y firefox htop git python-dev libxml2-dev libxslt-dev libffi-dev libssl-dev build-essential xvfb libboost-python-dev libleveldb-dev libjpeg-dev curl wget
-
-# For some versions of ubuntu, the package libleveldb1v5 isn't available. Use libleveldb1 instead.
-sudo apt-get install -y libleveldb1v5 || sudo apt-get install -y libleveldb1
-
-if [ "$flash" = true ]; then
-    sudo apt-get install -y adobe-flashplugin
+    echo ""
+    echo "WARNING: Adobe Flash is obsolete and no longer supported."
+    echo "The --flash option is deprecated and will be ignored."
+    echo "Continuing without Flash..."
+    echo ""
+    flash=false
 fi
 
-# Check if we're running on continuous integration
-# Python requirements are already installed by .travis.yml on Travis
-if [ "$TRAVIS" != "true" ]; then
-  wget https://bootstrap.pypa.io/get-pip.py
-  python get-pip.py --user
-  rm get-pip.py
-	pip install --user --upgrade -r requirements.txt
-fi
+# Note: We no longer do legacy system-wide apt installs of Firefox or
+# old Python packages here. Those paths are broken on modern distros.
+# The modern installation uses conda (environment.yaml) + scripts/install-firefox.sh.
+
+# Legacy system Python / pip setup has been removed.
+# Use the modern conda-based installation instead:
+#   conda env create -f environment.yaml
+#   ./scripts/install-firefox.sh
+echo "Note: Legacy system Python/pip setup removed. Prefer conda + modern installer."
 
 # Install a recent Firefox (required by the current privileged WebExtension).
 # The modern installation script targets Firefox 150+ unbranded builds
