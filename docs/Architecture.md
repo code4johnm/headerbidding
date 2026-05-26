@@ -1,7 +1,7 @@
 # Architecture Specification
 
 **headerbidding: Header Bidding Research Platform**  
-**Document Version**: 1.1.0  
+**Document Version**: 1.2.0  
 **Date**: 2026-04-26  
 **Status**: Authoritative technical architecture for the modernized platform  
 **Related Documents**: [Security-Hardening.md](docs/Security-Hardening.md), [Configuration.md](docs/Configuration.md), [AGENTS.md](AGENTS.md)
@@ -43,7 +43,6 @@ flowchart TB
     end
 
     subgraph Platform["headerbidding Platform"]
-        direction TB
         TM["TaskManager +<br/>StorageController"]
         FF["Instrumented Firefox<br/>+ Privileged Extension"]
     end
@@ -73,11 +72,10 @@ flowchart TB
 ```mermaid
 flowchart TB
     subgraph External["External / Untrusted"]
-        SITES[Target Sites\n(allow-listed)]
+        SITES[Target Sites<br/>(allow-listed)]
     end
 
     subgraph MeasurementBoundary["Measurement Boundary (High Privilege)"]
-        direction TB
         FF[Firefox +<br/>WebExtension<br/>(privileged experiment APIs)]
         subgraph Extension["Extension (TypeScript)"]
             BG[Background Scripts<br/>(HTTP, JS, Cookie, DNS, Nav instruments)]
@@ -207,7 +205,7 @@ flowchart LR
     DNS -->|lookups| Q1
 
     Q1 -->|binary socket| SC[StorageController]
-    SC -->|schema validation| PARQUET[Parquet<br/>site_visits, http_requests,<br/>javascript, cookies...]
+    SC -->|schema validation| PARQUET[Parquet<br/>site_visits, http_requests,<br/>javascript, cookies]
     SC -->|optional| REDACT[Redaction Pipeline<br/>(PII, bodies, high-entropy)]
     REDACT --> CLOUD[(S3/GCS<br/>encrypted buckets)]
 

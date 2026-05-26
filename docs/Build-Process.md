@@ -1,7 +1,7 @@
 # Build Process & Supply Chain Security
 
 **headerbidding: Header Bidding Research Platform**  
-**Version**: 1.1.0  
+**Version**: 1.2.0  
 **Date**: 2026-04-26  
 **Standards**: SLSA-inspired, NIST SSDF, OWASP Dependency-Track principles, reproducible builds.
 

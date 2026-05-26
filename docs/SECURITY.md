@@ -1,7 +1,7 @@
 # Security Policy
 
 **headerbidding: Header Bidding Research Platform (Modernized OpenWPM)**  
-**Version**: 1.1.0  
+**Version**: 1.2.0  
 **Date**: 2026-04-26  
 **Last Reviewed**: 2026-04-26  
 **Classification**: Public with controlled disclosure
@@ -14,7 +14,8 @@
 
 | Version                  | Support Level                          | Notes |
 |--------------------------|----------------------------------------|-------|
-| 1.1.0 (current)          | Full security review + modernization   | Documentation centralization + path cleanup |
+| 1.2.0 (current)          | Full security review + modernization   | Mermaid diagram fixes, documentation index/TOC, centralization of top-level docs into `docs/` |
+| 1.1.0                    | Security fixes + documentation         | Toolchain modernization, install script cleanup, Flash removal |
 | 0.8.0 (headerbidding)    | Security fixes only                    | Legacy research snapshot |
 | Older / pre-modernization| Critical issues only                   | Strongly recommend migration |
 | Legacy OpenWPM (Firefox 52) | None                                | Unpatchable vulnerabilities |

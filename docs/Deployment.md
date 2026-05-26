@@ -1,7 +1,7 @@
 # Deployment Guide
 
 **headerbidding: Header Bidding Research Platform**  
-**Version**: 1.1.0  
+**Version**: 1.2.0  
 **Date**: 2026-04-26  
 **Full Path**: `docs/Deployment.md`
 
