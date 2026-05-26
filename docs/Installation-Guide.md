@@ -4,7 +4,7 @@
 **Version**: 0.8.0-hb (research snapshot)  
 **Date**: 2026-04
 
-**WARNING**: The installation process described in `install.sh` deploys Firefox 52 ESR (EOL since 2018) and other vulnerable components. This is **not suitable for any environment with internet exposure** without isolation and modernization. See [Security-and-Privacy.md](/mnt/5TB/git/headerbidding/docs/Security-and-Privacy.md) before proceeding.
+**WARNING**: The installation process described in `install.sh` deploys Firefox 52 ESR (EOL since 2018) and other vulnerable components. This is **not suitable for any environment with internet exposure** without isolation and modernization. See [Security-and-Privacy.md](docs/Security-and-Privacy.md) before proceeding.
 
 ---
 
@@ -41,7 +41,7 @@ docker run --rm -it \
   python demo.py
 ```
 
-See [Deployment.md](/mnt/5TB/git/headerbidding/docs/Deployment.md) for production-grade container hardening and Kubernetes patterns.
+See [Deployment.md](docs/Deployment.md) for production-grade container hardening and Kubernetes patterns.
 
 ---
 
@@ -101,7 +101,7 @@ After any install:
    - Search entire codebase for `/home/johncook/headerBidding` and `/mnt/hgfs`.
    - Introduce `HB_ROOT`, `RESULTS_DIR` environment variables or a `config/local.json`.
 
-2. **Review & Lock Down `browser_params.json`** (see [Configuration.md](/mnt/5TB/git/headerbidding/docs/Configuration.md))
+2. **Review & Lock Down `browser_params.json`** (see [Configuration.md](docs/Configuration.md))
    - Disable `save_all_content` unless required.
    - Consider disabling `post_body` capture for most experiments.
 
@@ -153,7 +153,7 @@ Common failures:
 - **Firefox 52 fails to launch on newer kernels** – Expected. Use Docker with older base or modernize the stack.
 - **Permission errors on results/** – Ensure the user running the Python process owns the results tree.
 
-Full troubleshooting: [Troubleshooting.md](/mnt/5TB/git/headerbidding/docs/Troubleshooting.md)
+Full troubleshooting: [Troubleshooting.md](docs/Troubleshooting.md)
 
 ---
 
@@ -172,4 +172,4 @@ rm -rf results/ logs/ *.sqlite *.json
 
 ---
 
-**Next Document**: [Usage-Guide.md](/mnt/5TB/git/headerbidding/docs/Usage-Guide.md) – How to design and execute header bidding measurement experiments safely.
+**Next Document**: [Usage-Guide.md](docs/Usage-Guide.md) – How to design and execute header bidding measurement experiments safely.

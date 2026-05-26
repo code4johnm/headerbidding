@@ -165,4 +165,4 @@ Current codebase performs almost no validation. Add your own:
 
 ---
 
-**Next**: [Development.md](/mnt/5TB/git/headerbidding/docs/Development.md) for contributing improvements and modernization work.
+**Next**: [Development.md](docs/Development.md) for contributing improvements and modernization work.

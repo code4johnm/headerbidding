@@ -10,7 +10,7 @@
 
 ## 1. Development Philosophy
 
-1. **Security First** – Every change must be evaluated against the threat model in [Security-and-Privacy.md](/mnt/5TB/git/headerbidding/docs/Security-and-Privacy.md).
+1. **Security First** – Every change must be evaluated against the threat model in [Security-and-Privacy.md](docs/Security-and-Privacy.md).
 2. **Honesty About Debt** – Do not paper over the fact that the browser stack is ancient. Modernization is the primary technical goal.
 3. **Reproducibility** – Experiments must be fully defined in code + config + site lists + random seeds (where applicable).
 4. **Data Minimization** – Default to collecting less, not more.
@@ -31,7 +31,7 @@ Avoid putting new logic in the root except for demos and orchestration entrypoin
 
 ## 3. Setting Up a Development Environment
 
-1. Follow [Installation-Guide.md](/mnt/5TB/git/headerbidding/docs/Installation-Guide.md) inside a dedicated VM or container.
+1. Follow [Installation-Guide.md](docs/Installation-Guide.md) inside a dedicated VM or container.
 2. Install dev tools:
    ```bash
    pip install -r requirements-dev.txt
@@ -128,4 +128,4 @@ Any PR that adds or changes user-facing behavior **must** update the relevant fi
 
 ---
 
-**See also**: [Deployment.md](/mnt/5TB/git/headerbidding/docs/Deployment.md) for how research runs should be executed in production-like environments.
+**See also**: [Deployment.md](docs/Deployment.md) for how research runs should be executed in production-like environments.

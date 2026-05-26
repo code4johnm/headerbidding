@@ -33,7 +33,7 @@ Because this is a research snapshot with a deliberately archived legacy browser 
 
 ### For Issues in the Bundled Browser / Driver / Extension
 
-These components are intentionally ancient. Report only if you discover a **new** 0-day that affects the specific old versions in a novel way that could be exploited against research deployments. In most cases, simply document the exposure and focus effort on the modernization roadmap in [docs/Security-and-Privacy.md](/mnt/5TB/git/headerbidding/docs/Security-and-Privacy.md).
+These components are intentionally ancient. Report only if you discover a **new** 0-day that affects the specific old versions in a novel way that could be exploited against research deployments. In most cases, simply document the exposure and focus effort on the modernization roadmap in [docs/Security-and-Privacy.md](docs/Security-and-Privacy.md).
 
 **Do not** publish exploit code or detailed reproduction steps for browser vulnerabilities publicly until the research community has had reasonable time to migrate.
 

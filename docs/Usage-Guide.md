@@ -4,7 +4,7 @@
 **Version**: 0.8.0-hb (research snapshot)  
 **Date**: 2026-04
 
-**Prerequisites**: Read [Security-and-Privacy.md](/mnt/5TB/git/headerbidding/docs/Security-and-Privacy.md) and complete the Phase 0 containment steps in [Installation-Guide.md](/mnt/5TB/git/headerbidding/docs/Installation-Guide.md) before running any experiment.
+**Prerequisites**: Read [Security-and-Privacy.md](docs/Security-and-Privacy.md) and complete the Phase 0 containment steps in [Installation-Guide.md](docs/Installation-Guide.md) before running any experiment.
 
 ---
 
@@ -140,8 +140,8 @@ Located under `TrackerProject/src/ML/dataCollection/`:
 - Do **not** treat inferred profiles as ground truth without validation against consent-based data.
 - Do **not** keep raw bid + cookie datasets longer than the experiment protocol allows.
 
-See [Troubleshooting.md](/mnt/5TB/git/headerbidding/docs/Troubleshooting.md) for runtime errors and [Development.md](/mnt/5TB/git/headerbidding/docs/Development.md) for how to improve the platform.
+See [Troubleshooting.md](docs/Troubleshooting.md) for runtime errors and [Development.md](docs/Development.md) for how to improve the platform.
 
 ---
 
-**Next**: [Configuration.md](/mnt/5TB/git/headerbidding/docs/Configuration.md) for detailed parameter reference.
+**Next**: [Configuration.md](docs/Configuration.md) for detailed parameter reference.

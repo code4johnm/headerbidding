@@ -123,7 +123,7 @@ This enables exact reproduction (within the limits of live web non-determinism).
 
 ## 8. Incident Response in Deployed Environments
 
-See the IR section in [Security-and-Privacy.md](/mnt/5TB/git/headerbidding/docs/Security-and-Privacy.md). In deployment terms:
+See the IR section in [Security-and-Privacy.md](docs/Security-and-Privacy.md). In deployment terms:
 
 - Automated snapshot of the pod/VM disk on anomaly detection.
 - Immediate network quarantine via security group / network policy change.
@@ -131,4 +131,4 @@ See the IR section in [Security-and-Privacy.md](/mnt/5TB/git/headerbidding/docs/
 
 ---
 
-**Related**: [Troubleshooting.md](/mnt/5TB/git/headerbidding/docs/Troubleshooting.md) for operational problems observed in real runs.
+**Related**: [Troubleshooting.md](docs/Troubleshooting.md) for operational problems observed in real runs.

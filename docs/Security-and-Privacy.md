@@ -217,4 +217,4 @@ This repository follows **coordinated disclosure**.
 
 **This document must be reviewed and updated at least annually or after any significant architectural change or security incident.**
 
-**Next Steps for Readers**: Proceed to [Deployment.md](/mnt/5TB/git/headerbidding/docs/Deployment.md) for concrete hardened deployment patterns, then [Development.md](/mnt/5TB/git/headerbidding/docs/Development.md) for secure coding practices required for contributions.
+**Next Steps for Readers**: Proceed to [Deployment.md](docs/Deployment.md) for concrete hardened deployment patterns, then [Development.md](docs/Development.md) for secure coding practices required for contributions.

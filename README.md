@@ -31,7 +31,7 @@ This platform is a **research instrument** designed for controlled, ethical meas
 - Numerous absolute, researcher-specific paths (`/home/johncook/...`) remain in the TrackerProject layer.
 - File-based "mutex" synchronization via JSON files introduces race conditions and data loss risk.
 
-See [docs/Security-and-Privacy.md](/mnt/5TB/git/headerbidding/docs/Security-and-Privacy.md) for full threat model, hardening requirements, and modernization roadmap.
+See [docs/Security-and-Privacy.md](docs/Security-and-Privacy.md) for full threat model, hardening requirements, and modernization roadmap.
 
 **Do not use this codebase in its current form for any production, high-volume, or security-sensitive measurement without substantial remediation.**
 
@@ -90,7 +90,7 @@ cd headerbidding
 ./install.sh --no-flash   # WARNING: installs ancient Firefox 52 ESR
 ```
 
-See [docs/Installation-Guide.md](/mnt/5TB/git/headerbidding/docs/Installation-Guide.md) for development installs, Docker, and macOS variants.
+See [docs/Installation-Guide.md](docs/Installation-Guide.md) for development installs, Docker, and macOS variants.
 
 ### Minimal Crawl Example (Core OpenWPM)
 
@@ -138,7 +138,7 @@ Results are written to structured JSON under researcher-defined `results/bids_{i
 ## Project Structure
 
 ```
-/mnt/5TB/git/headerbidding/
+headerbidding/
 ├── automation/                  # OpenWPM core (instrumentation + orchestration)
 │   ├── Commands/                # Browser commands (get, dump cookies, custom JS, etc.)
 │   ├── DataAggregator/          # Local / S3 / Parquet writers + schema
@@ -164,13 +164,13 @@ Results are written to structured JSON under researcher-defined `results/bids_{i
 └── README.md                    # This file
 ```
 
-Full details: [docs/Architecture.md](/mnt/5TB/git/headerbidding/docs/Architecture.md)
+Full details: [docs/Architecture.md](docs/Architecture.md)
 
 ---
 
 ## Configuration
 
-See [docs/Configuration.md](/mnt/5TB/git/headerbidding/docs/Configuration.md) for:
+See [docs/Configuration.md](docs/Configuration.md) for:
 
 - `manager_params` vs `browser_params`
 - Enabling instruments (`http_instrument`, `js_instrument`, `cookie_instrument`)
@@ -204,33 +204,33 @@ Primary tables / Parquet datasets produced:
 - Custom HB bid JSON files (bidder, cpm, adUnitCode, timeToRespond, rendered)
 - Crawl history and configuration snapshots
 
-See [docs/Architecture.md](/mnt/5TB/git/headerbidding/docs/Architecture.md) for complete schema and data flow diagrams.
+See [docs/Architecture.md](docs/Architecture.md) for complete schema and data flow diagrams.
 
 ---
 
 ## Documentation
 
-All documentation lives under `/mnt/5TB/git/headerbidding/docs/`:
+All documentation lives under `headerbidding/docs/`:
 
-- [Architecture.md](/mnt/5TB/git/headerbidding/docs/Architecture.md) – System design, Mermaid diagrams, data flows
-- [Installation-Guide.md](/mnt/5TB/git/headerbidding/docs/Installation-Guide.md)
-- [Usage-Guide.md](/mnt/5TB/git/headerbidding/docs/Usage-Guide.md) – HB experiments, A/B testing, ML pipeline
-- [Security-and-Privacy.md](/mnt/5TB/git/headerbidding/docs/Security-and-Privacy.md) – OWASP/NIST alignment, threat model, hardening
-- [Configuration.md](/mnt/5TB/git/headerbidding/docs/Configuration.md)
-- [Development.md](/mnt/5TB/git/headerbidding/docs/Development.md)
-- [Deployment.md](/mnt/5TB/git/headerbidding/docs/Deployment.md)
-- [Troubleshooting.md](/mnt/5TB/git/headerbidding/docs/Troubleshooting.md)
+- [Architecture.md](docs/Architecture.md) – System design, Mermaid diagrams, data flows
+- [Installation-Guide.md](docs/Installation-Guide.md)
+- [Usage-Guide.md](docs/Usage-Guide.md) – HB experiments, A/B testing, ML pipeline
+- [Security-and-Privacy.md](docs/Security-and-Privacy.md) – OWASP/NIST alignment, threat model, hardening
+- [Configuration.md](docs/Configuration.md)
+- [Development.md](docs/Development.md)
+- [Deployment.md](docs/Deployment.md)
+- [Troubleshooting.md](docs/Troubleshooting.md)
 
 Root-level governance:
 
-- [SECURITY.md](/mnt/5TB/git/headerbidding/SECURITY.md)
-- [CONTRIBUTING.md](/mnt/5TB/git/headerbidding/CONTRIBUTING.md)
+- [SECURITY.md](SECURITY.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
 ## Contributing & Governance
 
-See [CONTRIBUTING.md](/mnt/5TB/git/headerbidding/CONTRIBUTING.md) and [docs/Development.md](/mnt/5TB/git/headerbidding/docs/Development.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/Development.md](docs/Development.md).
 
 All contributions must address the documented security and modernization gaps. PRs that only add features without hardening or tests will be declined.
 
@@ -246,7 +246,7 @@ Header bidding extensions were developed for academic research into the privacy,
 
 ## License
 
-Mozilla Public License 2.0. See [LICENSE](/mnt/5TB/git/headerbidding/LICENSE) for full text.
+Mozilla Public License 2.0. See [LICENSE](LICENSE) for full text.
 
 ---
 

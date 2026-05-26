@@ -219,7 +219,7 @@ flowchart LR
 - Extension runs with chrome privileges inside an ancient browser.
 - File-based IPC between crawl workers (no authentication, TOCTOU).
 
-See [Security-and-Privacy.md](/mnt/5TB/git/headerbidding/docs/Security-and-Privacy.md) for detailed threat model mapped to OWASP Top 10 / ASVS / NIST CSF.
+See [Security-and-Privacy.md](docs/Security-and-Privacy.md) for detailed threat model mapped to OWASP Top 10 / ASVS / NIST CSF.
 
 ---
 
@@ -261,4 +261,4 @@ For any serious continuation of this research:
 
 **Document Maintenance**: Update this architecture document whenever core data flows, new instruments, or major HB experiment patterns are added. Outdated architecture docs are a documentation security risk.
 
-**Next**: Read [Security-and-Privacy.md](/mnt/5TB/git/headerbidding/docs/Security-and-Privacy.md) for the comprehensive threat model and hardening requirements.
+**Next**: Read [Security-and-Privacy.md](docs/Security-and-Privacy.md) for the comprehensive threat model and hardening requirements.

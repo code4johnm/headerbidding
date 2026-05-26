@@ -27,7 +27,7 @@ Before writing significant code:
 
 ### 2. Development Setup
 
-See [docs/Development.md](/mnt/5TB/git/headerbidding/docs/Development.md) and [docs/Installation-Guide.md](/mnt/5TB/git/headerbidding/docs/Installation-Guide.md).
+See [docs/Development.md](docs/Development.md) and [docs/Installation-Guide.md](docs/Installation-Guide.md).
 
 **Mandatory first step for any non-trivial contribution**: Eliminate or abstract at least one instance of the hardcoded researcher paths (`/home/johncook/headerBidding` or `/mnt/hgfs`).
 
@@ -45,7 +45,7 @@ See [docs/Development.md](/mnt/5TB/git/headerbidding/docs/Development.md) and [d
 - Prefer small, reviewable PRs.
 - Reference issues (`Closes #42`).
 - Include before/after behavior for bug fixes.
-- For security-relevant changes, follow the disclosure policy in [SECURITY.md](/mnt/5TB/git/headerbidding/SECURITY.md).
+- For security-relevant changes, follow the disclosure policy in [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -81,7 +81,7 @@ Significant contributors will be acknowledged in a `CONTRIBUTORS` file or releas
 
 ## Questions?
 
-Open a GitHub Discussion or issue with the `question` label. For sensitive topics, use the security reporting channel described in [SECURITY.md](/mnt/5TB/git/headerbidding/SECURITY.md).
+Open a GitHub Discussion or issue with the `question` label. For sensitive topics, use the security reporting channel described in [SECURITY.md](SECURITY.md).
 
 ---
 
