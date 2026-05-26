@@ -72,21 +72,21 @@ flowchart TB
 ```mermaid
 flowchart TB
     subgraph External["External / Untrusted"]
-        SITES[Target Sites<br/>(allow-listed)]
+        SITES["Target Sites<br/>(allow-listed)"]
     end
 
     subgraph MeasurementBoundary["Measurement Boundary (High Privilege)"]
-        FF[Firefox +<br/>WebExtension<br/>(privileged experiment APIs)]
+        FF["Firefox +<br/>WebExtension<br/>(privileged experiment APIs)"]
         subgraph Extension["Extension (TypeScript)"]
-            BG[Background Scripts<br/>(HTTP, JS, Cookie, DNS, Nav instruments)]
+            BG["Background Scripts<br/>(HTTP, JS, Cookie, DNS, Nav instruments)"]
             PRIV[Privileged APIs<br/>sockets / profileDirIO / stackDump]
         end
     end
 
     subgraph Orchestration["Orchestration Layer (Trusted)"]
-        BM[BrowserManager<br/>(per browser process)]
-        TM[TaskManager<br/>(orchestrator + watchdog)]
-        SC[StorageController<br/>(isolated writer)]
+        BM["BrowserManager<br/>(per browser process)"]
+        TM["TaskManager<br/>(orchestrator + watchdog)"]
+        SC["StorageController<br/>(isolated writer)"]
     end
 
     subgraph Data["Data & Storage Layer"]
@@ -97,8 +97,8 @@ flowchart TB
     end
 
     subgraph Legacy["Legacy HB Research Layer (Transitioning)"]
-        TP[TrackerProject<br/>TrainingCrawl / A/B / ML]
-        HBJSON[Bid JSON files<br/>(race-prone)]
+        TP["TrackerProject<br/>TrainingCrawl / A/B / ML"]
+        HBJSON["Bid JSON files<br/>(race-prone)"]
     end
 
     SITES -->|untrusted content| FF
