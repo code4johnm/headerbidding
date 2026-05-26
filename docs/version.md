@@ -33,56 +33,19 @@ We follow a pragmatic hybrid versioning model:
 
 For day-to-day development, the root `VERSION` file continues to reflect the upstream base.
 
-## Major Changes in the OpenWPM-MAGA Fork
+## Version History
 
-### Major Accomplishments Summary (2026)
+This section provides a structured record of major changes and releases in the headerbidding (OpenWPM-MAGA) fork.
 
-- Complete reorganization and centralization of documentation into the `docs/` folder.
-- Creation of a comprehensive **Documentation Index** table in README.md with clear descriptions for all major documents.
-- Significant improvements to Mermaid diagram compatibility for GitHub rendering in `docs/Architecture.md`.
-- Removal of all machine-specific absolute paths from documentation.
-- Modernization of installation and development scripts (Flash removal, preference for modern conda + Firefox 150+ path).
-- Bumped all major documentation to version **1.2.0**.
-- Project identity normalization from "hb-update" to "headerbidding" throughout the docs.
+| Version | Date       | Description of Changes |
+|---------|------------|------------------------|
+| 1.2.0   | 2026-04-26 | **Documentation Organization, Versioning & Rendering Polish**<br><br>**Documentation Index & Structure**<br>• Expanded the Documentation Index table in README.md to include nearly all current files in `docs/`, with clear, professional descriptions for each entry.<br>• Added missing documents such as `version.md`, `Architecture-Internals.md`, `Platform-Architecture.md`, `Release-Checklist.md`, `Schema-Documentation.md`, and `Using_OpenWPM.md`.<br>• Grouped schema-related files under a single "JSON Schema Documentation" entry for better readability.<br><br>**version.md Improvements**<br>• Added a clean "Major Accomplishments Summary (2026)" section at the top of the Major Changes area.<br>• Converted the change history into a proper, scannable Version History table.<br>• Significantly expanded and restructured the documentation of all recent work.<br><br>**Versioning**<br>• Bumped document versions to **1.2.0** consistently across the entire suite (README, Architecture, Security-Hardening, Build-Process, Deployment, Configuration, Troubleshooting, AI-Agent-Context, CONTRIBUTING, etc.).<br>• Bumped the root `VERSION` file from `0.8.0` → `1.2.0` to align with documentation versioning.<br><br>**Mermaid & Rendering**<br>• Final round of Mermaid diagram fixes in `docs/Architecture.md` for reliable GitHub rendering (removal of remaining `classDef`, inner `direction TB`, and any leftover `\n` characters).<br><br>**Path Cleanup**<br>• Performed final removal of the last absolute workspace path references from the Documentation Index. |
+| 1.1.0   | 2026-04    | **Documentation Structure, Mermaid Fixes & Path Cleanup**<br><br>• Created the initial curated Documentation Index table in README.md.<br>• Performed the first major round of Mermaid diagram fixes in `docs/Architecture.md`:<br>  - Replaced the non-rendering `C4Context` diagram with standard Mermaid flowcharts.<br>  - Fixed `\n` line breaks in node labels (converted to `<br/>`).<br>  - Removed early `classDef` usage that was causing GitHub parse errors.<br>• Removed the majority of machine-specific absolute paths (`/mnt/5TB/git/hb-update/...`) from all documentation files.<br>• Bumped versions across the documentation suite to 1.1.0 and updated the Supported Versions table in `SECURITY.md`. |
+| 1.0.0   | 2026-04    | **Initial Professional Documentation Suite & Foundational Modernization**<br><br>**Documentation Creation & Expansion**<br>• Complete rewrite of README.md with security-first design, modern quick start, toolchain information, and a high-level features table.<br>• Created several major new professional documents:<br>  - `Security-Hardening.md` (OWASP, NIST, Zero Trust, AI agent security, hardening checklist)<br>  - `AI-Agent-Context.md` (strict rules for AI coding agents)<br>  - `Build-Process.md`, `Deployment.md`, `Troubleshooting.md`, and others.<br>• Significantly expanded `docs/Architecture.md` with multiple detailed Mermaid diagrams, trust boundaries, and system context views.<br><br>**Documentation Organization**<br>• Centralized all top-level `.md` files into the `docs/` directory for better maintainability (`AGENTS.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `CLAUDE.md`, `SECURITY.md`, `CONTRIBUTING.md`, `AI-Agent-Context.md`).<br><br>**Tooling & Script Modernization**<br>• Modernized `install.sh`, `install-dev.sh`, and `install-mac-dev.sh`.<br>• Deprecated and removed dangerous legacy Adobe Flash installation (Ubuntu 14.04 "trusty" repositories).<br>• Aligned installation with the modern conda environment + Firefox 150+ unbranded builds.<br><br>**Other Improvements**<br>• Project identity normalization: updated references from "hb-update" to "headerbidding" across documentation.<br>• Established consistent professional standards (version numbers, dates, security callouts, and cross-references) across all docs. |
 
-### Documentation Overhaul and Organization (Major Focus)
+| Planned | TBD        | **Future Enhancements**<br><br>• Further expansion or categorization of the Documentation Index (e.g., by topic or audience).<br>• Potential addition of more architecture diagrams or security-related visuals.<br>• Continued alignment between root `VERSION` and documentation releases.<br>• Possible deeper integration of security hardening tracking into the version history. |
 
-A comprehensive documentation modernization and organization effort was completed:
-
-**Documentation Structure Improvements**
-- All top-level `.md` documentation files (except README.md) were moved into `docs/` for better organization:
-  - `AGENTS.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `CLAUDE.md`
-  - `SECURITY.md`, `CONTRIBUTING.md`, `AI-Agent-Context.md`
-- A curated **Documentation Index** table (with columns: Document, Location, Description) was added to README.md covering all major documents in `docs/`.
-- All machine-specific absolute paths (`/mnt/5TB/git/hb-update/...`) were systematically removed from every Markdown file and replaced with clean relative paths.
-
-**Documentation Quality & Rendering Fixes**
-- Comprehensive fixes to Mermaid diagrams in `docs/Architecture.md` to make them render reliably on GitHub:
-  - Replaced the broken `C4Context` diagram with a standard Mermaid flowchart.
-  - Fixed all `\n` line breaks inside node labels (replaced with `<br/>`).
-  - Removed `classDef` + `class` styling and inner `direction TB` directives (known to cause parse failures on GitHub).
-- Added a clear text-based **Legend** for trust levels under the main architecture diagram.
-- Bumped document versions to **1.2.0** across the entire documentation suite (README, Architecture, Security-Hardening, Build-Process, etc.).
-
-**New and Significantly Updated Documents**
-- `docs/Security-Hardening.md` — New comprehensive guide covering OWASP Top 10, NIST CSF, Zero Trust for research workloads, privileged extension security, AI agent integration risks, and a prioritized hardening checklist.
-- `docs/AI-Agent-Context.md` — New strict rule set and context file for AI coding agents.
-- `docs/Build-Process.md`, `docs/Deployment.md`, `docs/Troubleshooting.md` — New or heavily expanded operational guides.
-- `README.md` — Complete rewrite with modern quick start, toolchain information, and security warnings.
-- `docs/Architecture.md` — Significantly expanded with multiple diagrams and trust boundary analysis.
-- `docs/SECURITY.md` and `docs/CONTRIBUTING.md` — Updated and moved into docs/.
-
-**Install Script & Toolchain Modernization**
-- Removed dangerous legacy Adobe Flash installation logic (Ubuntu 14.04 "trusty" repositories).
-- Modernized `install.sh`, `install-dev.sh`, and `install-mac-dev.sh` to prefer the conda + `scripts/install-firefox.sh` path.
-- Updated documentation and scripts to target current Firefox (150+) instead of legacy Firefox 52.
-
-**Project Identity Normalization**
-- Internal references updated from "hb-update" to "headerbidding" for consistency with the project's canonical name while preserving local directory structure.
-
-All documentation now follows consistent professional standards with version numbers, dates, security considerations, and cross-references.
-
-### Code Improvements and Bug Fixes
+### Code Improvements and Bug Fixes (Historical)
 
 The following targeted improvements have been applied on top of upstream v0.34.0:
 
