@@ -1,37 +1,38 @@
 #!/bin/bash
 set -e
 
-# Note: This install script assumes that node and python is already setup
-# and is meant for setting up local development rather than CI environments
+# Modern macOS development setup for headerbidding / OpenWPM.
+#
+# Recommended flow:
+#   conda env create -f environment.yaml
+#   conda activate openwpm
+#   ./install-mac-dev.sh
 
 if [[ $# -gt 0 ]]; then
-    echo "Usage: install-mac.sh" >&2
+    echo "Usage: ./install-mac-dev.sh" >&2
     exit 1
 fi
 
-brew install leveldb
+echo "Setting up macOS development dependencies..."
 
-pip install -U -r requirements.txt
-
-# Make npm packages available
-brew install node || brew upgrade node
-
-# Install modern Firefox (150+) using the dedicated cross-platform script.
-# This is required for the current privileged WebExtension (manifest strict_min_version: 150.0).
-echo "Installing modern Firefox using scripts/install-firefox.sh (cross-platform)..."
+# Install modern Firefox (150+) if not already present
 if [ -x "./scripts/install-firefox.sh" ]; then
     ./scripts/install-firefox.sh
 else
     echo "ERROR: scripts/install-firefox.sh not found." >&2
-    echo "Legacy Firefox 52 installation has been removed from this project." >&2
     exit 1
 fi
 
-# geckodriver should come from conda (environment.yaml pins a modern version).
-# If not using conda, install it separately and ensure it is on PATH.
+# geckodriver is expected to come from the conda environment.yaml
 
-# Dependencies for OpenWPM development -- NOT needed to run the platform.
-# * Required for compiling Firefox extension
-npm install jpm -g
+# Development-only tools (not required to run crawls)
+brew install leveldb || true
+
+# The modern extension no longer uses the deprecated 'jpm' tool.
+# Building is done via npm/webpack. See scripts/build-extension.sh.
 
 pip install -U -r requirements-dev.txt
+
+echo "macOS development setup complete."
+echo "Activate the environment with: conda activate openwpm"
+echo "Build the extension with: ./scripts/build-extension.sh"

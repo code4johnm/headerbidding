@@ -2,6 +2,10 @@
 
 **Modernized OpenWPM-based framework for large-scale, ethical measurement of Header Bidding (HB), Real-Time Bidding (RTB), and Prebid.js auction dynamics.**
 
+> **Documentation Index**: See the [full curated documentation table](#documentation-index) at the bottom of this file.
+
+
+
 > **Version**: 1.1.0-hb (research snapshot)  
 > **Last Updated**: 2026-04-26  
 > **License**: Mozilla Public License 2.0 (MPL-2.0)  
@@ -64,6 +68,7 @@ The platform enables reproducible studies on bidder landscape concentration, pri
 
 | Component                    | Capability                                                                 | Security Notes |
 |------------------------------|----------------------------------------------------------------------------|----------------|
+| **Toolchain & Installation** | Conda-based environment (`environment.yaml`), dedicated Firefox 150+ installer (`scripts/install-firefox.sh`), modern TypeScript WebExtension build | Prefers isolated conda envs; legacy system `apt` paths deprecated |
 | Browser Orchestration        | N parallel isolated Firefox instances via Selenium + geckodriver; synchronized or sharded execution | Process + profile isolation; watchdog for crash recovery |
 | HTTP Instrumentation         | Full requests, responses, redirects, POST bodies, headers, CSP, referrer, optional content + call stacks | High data sensitivity; bodies must be classified/redacted |
 | JavaScript Instrumentation   | Configurable property gets/sets/calls on sensitive APIs (fingerprinting collections + custom); recursion depth control; full call stacks via privileged `stackDump` | `unsafe-eval` and broad permissions required; page context untrusted |
@@ -82,16 +87,26 @@ Full instrumentation settings: [docs/Configuration.md](docs/Configuration.md) an
 **Prerequisites (Recommended Path)**
 
 - Ubuntu 22.04+ / macOS (recent)
-- Python 3.10+
-- Conda (or Docker)
-- Current Firefox + geckodriver (installed via `./install.sh`)
+- Conda (Miniforge recommended)
+- Docker (optional but recommended for isolation)
 
 ```bash
 git clone <repository-url> headerbidding
 cd headerbidding
-./install.sh                 # Creates conda env "openwpm", builds Extension, installs Firefox
+
+# Primary modern installation
+conda env create -f environment.yaml
 conda activate openwpm
+./scripts/install-firefox.sh
+
+# For development (TypeScript extension + testing tools)
+./install-dev.sh          # Linux
+# or
+./install-mac-dev.sh      # macOS
 ```
+
+> **Note**: The root `./install.sh` still exists for backward compatibility but the
+> conda + `scripts/` path above is the current recommended toolchain.
 
 **Minimal Modern Crawl Example**
 
@@ -189,7 +204,7 @@ All documentation follows enterprise standards for secure research systems.
 - [docs/SECURITY.md](docs/SECURITY.md) – Vulnerability reporting, supported versions, disclosure policy
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) – Secure contribution process, review requirements
 - [docs/AI-Agent-Context.md](docs/AI-Agent-Context.md) – Central machine-readable context for AI coding agents (security rules, allowed operations, testing mandates)
-- [AGENTS.md](AGENTS.md) – Operational guidance for AI coding agents (build commands, known issues)
+- [docs/AGENTS.md](docs/AGENTS.md) – Operational guidance for AI coding agents (build commands, known issues)
 - [docs/Security-and-Privacy.md](docs/Security-and-Privacy.md) – Existing threat model (complementary to the new hardening guide)
 
 Additional Sphinx documentation (API, schemas, papers) is available under `docs/`.
@@ -232,3 +247,25 @@ This platform is derived from OpenWPM, originally developed by the Princeton Uni
 **Maintained for research transparency, reproducibility, and responsible disclosure of ad-tech measurement risks. Not for operational or commercial use without major remediation.**
 
 For questions on responsible use or the modernization program, open an issue with the `security` or `modernization` label.
+## Documentation Index
+
+| Document | Location | Description |
+|----------|----------|-------------|
+| README.md | `/mnt/5TB/git/hb-update/README.md` | Main project overview, security warnings, quick start, and high-level features. |
+| AGENTS.md | `docs/AGENTS.md` | Guidance for AI coding agents (build commands, architecture notes, known issues). |
+| AI-Agent-Context.md | `docs/AI-Agent-Context.md` | Strict rules and context file specifically for AI coding agents and LLMs working on the codebase. |
+| Architecture.md | `docs/Architecture.md` | Detailed system architecture with Mermaid diagrams, trust boundaries, data flows, and component responsibilities. |
+| Build-Process.md | `docs/Build-Process.md` | Reproducible builds, supply chain security, extension compilation, and dependency management. |
+| Configuration.md | `docs/Configuration.md` | Authoritative reference for `ManagerParams` and `BrowserParams`. |
+| CONTRIBUTING.md | `docs/CONTRIBUTING.md` | Contribution guidelines with emphasis on security reviews and modernization. |
+| Deployment.md | `docs/Deployment.md` | Deployment patterns (local, Docker, Kubernetes, air-gapped) following Zero Trust principles. |
+| Development.md | `docs/Development.md` | Developer guide and contribution workflow. |
+| Installation-Guide.md | `docs/Installation-Guide.md` | Installation instructions and environment support matrix. |
+| Security-Hardening.md | `docs/Security-Hardening.md` | Comprehensive security guide (OWASP, NIST, Zero Trust, AI agent integration, hardening checklist). |
+| SECURITY.md | `docs/SECURITY.md` | Vulnerability disclosure policy and supported versions. |
+| Troubleshooting.md | `docs/Troubleshooting.md` | Common issues, debugging steps, and recovery procedures. |
+| Usage-Guide.md | `docs/Usage-Guide.md` | Detailed usage patterns for experiments and header bidding research. |
+| Security-and-Privacy.md | `docs/Security-and-Privacy.md` | Legacy threat model and privacy considerations (complementary to Security-Hardening.md). |
+| CHANGELOG.md | `docs/CHANGELOG.md` | Project changelog. |
+| CODE_OF_CONDUCT.md | `docs/CODE_OF_CONDUCT.md` | Contributor Covenant code of conduct. |
+| CLAUDE.md | `docs/CLAUDE.md` | Symlink to AGENTS.md for Claude and other AI tools. |

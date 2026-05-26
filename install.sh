@@ -1,6 +1,24 @@
 #!/bin/bash
 set -e
 
+# =====================================================================
+# headerbidding / OpenWPM Installation Script (Legacy Entry Point)
+#
+# This script is kept for backward compatibility.
+#
+# RECOMMENDED MODERN INSTALLATION (2026+):
+#
+#   conda env create -f environment.yaml
+#   conda activate openwpm
+#   ./scripts/install-firefox.sh
+#
+# For development tools, also run:
+#   ./install-dev.sh          # Linux
+#   ./install-mac-dev.sh      # macOS
+#
+# The commands below will still work but are less maintained.
+# =====================================================================
+
 if [[ $# -gt 1 ]]; then
     echo "Usage: install.sh [--no-flash]" >&2
     echo "Note: --flash is deprecated and ignored (Adobe Flash is obsolete)." >&2

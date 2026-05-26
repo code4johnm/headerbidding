@@ -36,27 +36,30 @@ All new development must occur in the modern core. Legacy components are schedul
 ## 2. System Context (C4-Style)
 
 ```mermaid
-C4Context
-    title System Context - headerbidding Research Platform
+flowchart TB
+    subgraph External["External / Untrusted"]
+        Researcher["Researcher / AI Agent"]
+        Websites["Target Websites<br/>(allow-listed only)"]
+    end
 
-    Person(researcher, "Researcher / AI Agent", "Defines experiments, allow-lists, and purpose tags")
-    System_Boundary(platform, "headerbidding Platform") {
-        System(taskmanager, "TaskManager + StorageController", "Orchestration & data plane")
-        System_Ext(firefox, "Instrumented Firefox\n+ Privileged Extension", "Measurement boundary")
-    }
-    System_Ext(web, "Target Websites\n(allow-listed only)", "Untrusted content")
-    System_Ext(storage, "Local FS / S3 / GCS\n/ Parquet", "Telemetry & bid data")
-    System_Ext(proxy, "Egress Proxy\n(allow-list + logging)", "Network boundary (recommended)")
+    subgraph Platform["headerbidding Platform"]
+        direction TB
+        TM["TaskManager +<br/>StorageController"]
+        FF["Instrumented Firefox<br/>+ Privileged Extension"]
+    end
 
-    Rel(researcher, taskmanager, "Submits signed task manifests\nwith capability tokens", "HTTPS / local IPC")
-    Rel(taskmanager, firefox, "Launches + drives via Selenium\n+ bidirectional sockets", "Local process + WebSocket-like")
-    Rel(firefox, web, "Fetches & executes\n(HTTP/HTTPS/WS)", "Untrusted")
-    Rel(firefox, taskmanager, "Streams HTTP/JS/Cookie/DNS\n+ HB bid events", "Binary socket protocol")
-    Rel(taskmanager, storage, "Writes structured records\n& unstructured artifacts", "Parquet/SQL/JSON")
-    Rel(firefox, proxy, "All outbound traffic\n(forced via policy)", "HTTP/SOCKS")
-    Rel(proxy, web, "Filtered & logged", "")
+    subgraph ExternalServices["External Services"]
+        Storage["Local FS / S3 / GCS / Parquet"]
+        Proxy["Egress Proxy<br/>(recommended)"]
+    end
 
-    UpdateLayoutConfig($c4ShapeInRow="3", $c4ShapeInBoundary="2")
+    Researcher -->|Task manifests<br/>with capability tokens| TM
+    TM -->|Launches + drives| FF
+    FF -->|Fetches & executes| Websites
+    FF -->|Telemetry streams| TM
+    TM -->|Writes records| Storage
+    FF -->|All traffic via policy| Proxy
+    Proxy -->|Filtered & logged| Websites
 ```
 
 **Key External Entities**:
