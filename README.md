@@ -255,17 +255,23 @@ For questions on responsible use or the modernization program, open an issue wit
 | AGENTS.md | `docs/AGENTS.md` | Guidance for AI coding agents (build commands, architecture notes, known issues). |
 | AI-Agent-Context.md | `docs/AI-Agent-Context.md` | Strict rules and context file specifically for AI coding agents and LLMs working on the codebase. |
 | Architecture.md | `docs/Architecture.md` | Detailed system architecture with Mermaid diagrams, trust boundaries, data flows, and component responsibilities. |
+| Architecture-Internals.md | `docs/Architecture-Internals.md` | Additional internal architecture details and supplementary diagrams. |
 | Build-Process.md | `docs/Build-Process.md` | Reproducible builds, supply chain security, extension compilation, and dependency management. |
 | Configuration.md | `docs/Configuration.md` | Authoritative reference for `ManagerParams` and `BrowserParams`. |
 | CONTRIBUTING.md | `docs/CONTRIBUTING.md` | Contribution guidelines with emphasis on security reviews and modernization. |
 | Deployment.md | `docs/Deployment.md` | Deployment patterns (local, Docker, Kubernetes, air-gapped) following Zero Trust principles. |
 | Development.md | `docs/Development.md` | Developer guide and contribution workflow. |
 | Installation-Guide.md | `docs/Installation-Guide.md` | Installation instructions and environment support matrix. |
+| Platform-Architecture.md | `docs/Platform-Architecture.md` | Legacy platform architecture documentation. |
+| Release-Checklist.md | `docs/Release-Checklist.md` | Step-by-step checklist for preparing new releases. |
+| Schema-Documentation.md | `docs/Schema-Documentation.md` | Overview of data schemas used by the platform. |
 | Security-Hardening.md | `docs/Security-Hardening.md` | Comprehensive security guide (OWASP, NIST, Zero Trust, AI agent integration, hardening checklist). |
+| Security-and-Privacy.md | `docs/Security-and-Privacy.md` | Legacy threat model and privacy considerations (complementary to Security-Hardening.md). |
 | SECURITY.md | `docs/SECURITY.md` | Vulnerability disclosure policy and supported versions. |
 | Troubleshooting.md | `docs/Troubleshooting.md` | Common issues, debugging steps, and recovery procedures. |
 | Usage-Guide.md | `docs/Usage-Guide.md` | Detailed usage patterns for experiments and header bidding research. |
-| Security-and-Privacy.md | `docs/Security-and-Privacy.md` | Legacy threat model and privacy considerations (complementary to Security-Hardening.md). |
+| Using_OpenWPM.md | `docs/Using_OpenWPM.md` | Guide for using the core OpenWPM functionality. |
 | CHANGELOG.md | `docs/CHANGELOG.md` | Project changelog. |
 | CODE_OF_CONDUCT.md | `docs/CODE_OF_CONDUCT.md` | Contributor Covenant code of conduct. |
 | CLAUDE.md | `docs/CLAUDE.md` | Symlink to AGENTS.md for Claude and other AI tools. |
+| JSON Schema Documentation | `docs/schemas/` | Auto-generated detailed documentation for the JavaScript instrumentation settings schema. |
