@@ -203,7 +203,7 @@ flowchart LR
 
     Q1 -->|binary socket| SC[StorageController]
     SC -->|schema validation| PARQUET[Parquet<br/>site_visits, http_requests,<br/>javascript, cookies]
-    SC -->|optional| REDACT[Redaction Pipeline<br/>(PII, bodies, high-entropy)]
+    SC -->|optional| REDACT["Redaction Pipeline<br/>(PII, bodies, high-entropy)"]
     REDACT --> CLOUD[(S3/GCS<br/>encrypted buckets)]
 ```
 
