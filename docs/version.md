@@ -21,7 +21,7 @@ headerbidding (OpenWPM-MAGA) is a maintained distribution focused on:
 
 This fork is based on upstream OpenWPM **v0.34.0**.
 
-The canonical upstream version is recorded in the root [VERSION](../VERSION) file.
+The current fork version is recorded in the root [VERSION](../VERSION) file (currently `1.2.0`).
 
 ## Fork Versioning Scheme
 
@@ -35,22 +35,34 @@ For day-to-day development, the root `VERSION` file continues to reflect the ups
 
 ## Major Changes in the OpenWPM-MAGA Fork
 
+### Major Accomplishments Summary (2026)
+
+- Complete reorganization and centralization of documentation into the `docs/` folder.
+- Creation of a comprehensive **Documentation Index** table in README.md with clear descriptions for all major documents.
+- Significant improvements to Mermaid diagram compatibility for GitHub rendering in `docs/Architecture.md`.
+- Removal of all machine-specific absolute paths from documentation.
+- Modernization of installation and development scripts (Flash removal, preference for modern conda + Firefox 150+ path).
+- Bumped all major documentation to version **1.2.0**.
+- Project identity normalization from "hb-update" to "headerbidding" throughout the docs.
+
 ### Documentation Overhaul and Organization (Major Focus)
 
 A comprehensive documentation modernization and organization effort was completed:
 
 **Documentation Structure Improvements**
-- All top-level `.md` documentation files (except README.md) were moved into `docs/` for better organization and maintainability (`AGENTS.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `CLAUDE.md`, `SECURITY.md`, `CONTRIBUTING.md`, `AI-Agent-Context.md`).
-- A curated **Documentation Index** table was added to README.md listing all major documents with name, location, and description columns.
-- All machine-specific absolute paths (`/mnt/5TB/git/hb-update/...`) were removed from documentation and replaced with clean relative paths.
+- All top-level `.md` documentation files (except README.md) were moved into `docs/` for better organization:
+  - `AGENTS.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `CLAUDE.md`
+  - `SECURITY.md`, `CONTRIBUTING.md`, `AI-Agent-Context.md`
+- A curated **Documentation Index** table (with columns: Document, Location, Description) was added to README.md covering all major documents in `docs/`.
+- All machine-specific absolute paths (`/mnt/5TB/git/hb-update/...`) were systematically removed from every Markdown file and replaced with clean relative paths.
 
 **Documentation Quality & Rendering Fixes**
-- Major improvements to Mermaid diagrams in `docs/Architecture.md`:
-  - Replaced non-rendering `C4Context` syntax with standard Mermaid flowcharts.
-  - Fixed `\n` line breaks (replaced with `<br/>`).
-  - Removed `classDef` styling and inner `direction` directives that caused GitHub rendering failures.
-- Added a proper text-based legend for trust levels in architecture diagrams.
-- Bumped document versions across the suite to 1.2.0.
+- Comprehensive fixes to Mermaid diagrams in `docs/Architecture.md` to make them render reliably on GitHub:
+  - Replaced the broken `C4Context` diagram with a standard Mermaid flowchart.
+  - Fixed all `\n` line breaks inside node labels (replaced with `<br/>`).
+  - Removed `classDef` + `class` styling and inner `direction TB` directives (known to cause parse failures on GitHub).
+- Added a clear text-based **Legend** for trust levels under the main architecture diagram.
+- Bumped document versions to **1.2.0** across the entire documentation suite (README, Architecture, Security-Hardening, Build-Process, etc.).
 
 **New and Significantly Updated Documents**
 - `docs/Security-Hardening.md` — New comprehensive guide covering OWASP Top 10, NIST CSF, Zero Trust for research workloads, privileged extension security, AI agent integration risks, and a prioritized hardening checklist.
