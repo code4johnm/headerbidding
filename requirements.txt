@@ -29,7 +29,7 @@ tblib
 tld
 
 
-# Python 3 is not fully supported prior to Selenium 3.x.
-# Geckodriver 0.15.0 requires Selenium 3.4+, and doesn't
-# work with 3.7+.
-selenium>=3.4.0,<3.7.0
+# NOTE: This requirements.txt is legacy.
+# The modern installation path uses environment.yaml (conda) which pins:
+#   selenium=4.43.0, geckodriver=0.36.0, python>=3.12
+# Do not use this file for new environments. It is kept only for historical reference.

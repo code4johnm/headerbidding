@@ -1,0 +1,103 @@
+# This workflow will run all tests as well as pre-commit
+
+name: Tests and linting
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  merge_group:
+  schedule:
+    - cron: "0 0 */2 * *"
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pre-commit run --all
+
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: python demo.py --headless
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        group: [1, 2, 3, 4, 5, 6, 7]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: ./scripts/ci.sh
+        env:
+          DISPLAY: ":99.0"
+          GROUP: ${{ matrix.group }}
+          SPLITS: 7
+      - name: Test failure summary
+        if: always()
+        continue-on-error: true
+        run: |
+          python - <<'PYEOF'
+          import xml.etree.ElementTree as ET, os, sys
+          if not os.path.exists("junit-report.xml"):
+              sys.exit(0)
+          tree = ET.parse("junit-report.xml")
+          root = tree.getroot()
+          # Collect suite-level stats
+          suites = list(root.iter("testsuite"))
+          total = sum(int(s.get("tests", 0)) for s in suites)
+          fails = sum(int(s.get("failures", 0)) for s in suites)
+          errs = sum(int(s.get("errors", 0)) for s in suites)
+          bad = fails + errs
+          if bad == 0:
+              sys.exit(0)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write(f"### Group ${{ matrix.group }}: {bad}/{total} test(s) failed\n\n")
+              for tc in root.iter("testcase"):
+                  for tag in ("failure", "error"):
+                      elem = tc.find(tag)
+                      if elem is None:
+                          continue
+                      name = tc.get("name", "?")
+                      cls = tc.get("classname", "")
+                      short = cls.rsplit(".", 1)[-1] if cls else ""
+                      etype = elem.get("type", tag)
+                      msg = elem.get("message", "")
+                      trace = (elem.text or "").rstrip()
+                      # Summary line shows test + exception type
+                      f.write(f"<details>\n<summary>")
+                      f.write(f"<code>{short}::{name}</code> — {etype}")
+                      if msg:
+                          oneliner = msg.split("\n")[0][:120]
+                          f.write(f": {oneliner}")
+                      f.write(f"</summary>\n\n```\n{trace}\n```\n</details>\n\n")
+          PYEOF
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ matrix.group }}
+          path: coverage.xml
+
+  upload-coverage:
+    runs-on: ubuntu-latest
+    needs: tests
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: .
+          fail_ci_if_error: false

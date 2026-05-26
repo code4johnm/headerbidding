@@ -1,255 +1,234 @@
-# HeaderBidding Research Platform
+# hb-update: Header Bidding Research Platform
 
-**A large-scale web measurement and analysis framework for studying Header Bidding (HB), Real-Time Bidding (RTB), and Prebid.js auction dynamics in the ad-tech ecosystem.**
+**Modernized OpenWPM-based framework for large-scale, ethical measurement of Header Bidding (HB), Real-Time Bidding (RTB), and Prebid.js auction dynamics.**
 
-> **Version**: 0.8.0-hb (research snapshot)  
-> **Date**: 2026-04  
+> **Version**: 1.1.0-hb (research snapshot)  
+> **Last Updated**: 2026-04-26  
 > **License**: Mozilla Public License 2.0 (MPL-2.0)  
-> **Status**: Research / Academic Use Only – Significant technical debt and security limitations apply.
+> **Primary Standards Alignment**: OWASP Top 10 (2021), OWASP ASVS 4.0, NIST Cybersecurity Framework, ISO 27001 principles, Secure SDLC (SSDL), Zero Trust research workload practices.
 
 ---
 
-## Security & Responsible Use Warning (Critical)
+## Critical Security & Responsible Use Warning
 
-This platform is a **research instrument** designed for controlled, ethical measurement of web advertising technologies. It:
+**This is a high-privilege research measurement platform, not a general-purpose tool or production system.**
 
-- Launches instrumented browsers that visit arbitrary web pages.
-- Collects highly sensitive telemetry including HTTP requests/responses (with bodies and stack traces), JavaScript API calls, cookies, and detailed real-time bid responses (CPM, bidders, ad units).
-- Supports A/B experimentation with custom tracker/ad blocking profiles that can materially affect publisher revenue.
+The platform:
 
-**Before using this software you MUST:**
+- Launches instrumented browsers that fetch and execute arbitrary third-party web content.
+- Captures highly sensitive telemetry: full HTTP requests/responses (including bodies and referrers), detailed JavaScript property accesses and call stacks on sensitive APIs, cookies, DNS, navigation events, and real-time bidding telemetry (bidder participation, CPM values, ad unit dynamics capable of enabling cross-site interest profiling).
+- Executes researcher-supplied JavaScript in page context and privileged browser chrome via a custom WebExtension with broad `<all_urls>` permissions and custom privileged experiment APIs (`sockets`, `profileDirIO`, `stackDump`).
+- Supports A/B experimentation that can alter observed auction outcomes and publisher revenue signals.
 
-1. Operate exclusively in isolated environments (dedicated research VMs, hardened containers, or air-gapped networks).
-2. Obtain explicit legal and IRB/ethics approval for any data collection involving real user traffic or third-party sites.
-3. Implement strict data minimization, retention limits, access controls, and deletion policies for bid landscapes and inferred interest profiles.
-4. Never run against production properties or without rate limiting and allow-listing.
+**Mandatory Prerequisites (Non-Negotiable)**
 
-**Known Critical Limitations (2026)**
+Before any execution:
 
-- Firefox 52 ESR (EOL 2018) and geckodriver 0.15 are bundled/expected by install scripts. These contain unpatched vulnerabilities.
-- The instrumentation extension uses the long-deprecated Add-on SDK.
-- Numerous absolute, researcher-specific paths (`/home/johncook/...`) remain in the TrackerProject layer.
-- File-based "mutex" synchronization via JSON files introduces race conditions and data loss risk.
+1. Obtain formal IRB/ethics board approval and legal review for the specific data collection and retention plan.
+2. Deploy exclusively in isolated, hardened research environments (dedicated VMs, Kubernetes namespaces with NetworkPolicy, or air-gapped clusters). Never on multi-tenant or production-adjacent infrastructure.
+3. Implement a Data Protection Impact Assessment (DPIA) and data classification scheme for all collected bid landscapes and derived profiles.
+4. Enforce strict destination allow-lists, rate limiting, and crawl politeness policies. Never crawl production properties without explicit authorization.
+5. Apply the hardening controls documented in [docs/Security-Hardening.md](docs/Security-Hardening.md) before first use.
 
-See [docs/Security-and-Privacy.md](docs/Security-and-Privacy.md) for full threat model, hardening requirements, and modernization roadmap.
+**Known Critical Limitations**
 
-**Do not use this codebase in its current form for any production, high-volume, or security-sensitive measurement without substantial remediation.**
+- Legacy `TrackerProject/` layer contains absolute researcher-specific filesystem paths (e.g., `/home/johncook/...`) and JSON-file mutex coordination with well-documented race conditions and data-loss risks.
+- Dockerfiles and some install scripts reference outdated directory layouts (`automation/`) and ancient browser stacks in certain configurations.
+- The privileged instrumentation extension (manifest v2, `unsafe-eval` CSP) runs with chrome-level privileges; a compromised extension or malicious site exploiting instrumentation hooks presents a realistic host-escalation vector.
+- No built-in authentication, authorization, or encryption-at-rest for telemetry. The platform assumes a fully trusted local execution context.
+- Pickle-based IPC for exception transport between browser manager processes (local only, but deserialization of untrusted data remains a latent risk if queues are externally influenced).
+
+**Status**: Suitable only for controlled academic and internal research after substantial hardening and modernization. Not intended for operational, high-volume, or security-sensitive production measurement.
+
+See [docs/Security-Hardening.md](docs/Security-Hardening.md) and [docs/SECURITY.md](docs/SECURITY.md) for the full threat model, OWASP/NIST mapping, and prioritized remediation roadmap.
 
 ---
 
 ## Overview
 
-HeaderBidding extends the OpenWPM (Open Web Privacy Measurement) framework with specialized tooling for header bidding research:
+`hb-update` is the active modernization effort for a specialized research fork of the [OpenWPM](https://github.com/openwpm/OpenWPM) web privacy measurement framework. It adds deep instrumentation and harvesting for header bidding / Prebid.js auction dynamics while preserving the core strengths of OpenWPM: parallel browser orchestration, comprehensive HTTP/JS/cookie telemetry, and multiple storage backends.
 
-- **Core Automation (`automation/`)**: Multi-process, instrumented Firefox orchestration with deep HTTP, JavaScript, and cookie telemetry. Supports parallel browsers, command sequencing, SQLite/Parquet/S3 aggregation, and crash-resilient execution.
-- **Header Bidding Research Layer (`TrackerProject/`)**:
-  - Prebid.js / `pbjs` bid response harvesting (`getBidResponses()`, winning bids, CPM, time-to-respond, bidder participation).
-  - Category-based site crawling (Alexa top sites across 17 verticals).
-  - A/B testing framework (intent vs. no-intent, tracker blocking profiles using modified uBlock Origin / Disconnect / Ghostery lists).
-  - ML pipeline for bid-based user profile generation and interest inference studies.
-  - Custom HB logging and result aggregation for revenue/auction dynamics analysis.
+**Modern Core (Recommended)**:
+- `openwpm/` – Python 3.10+ package (TaskManager, BrowserManager, command system, storage providers for SQLite/Parquet/S3/GCS/LevelDB).
+- `Extension/` – TypeScript WebExtension (webpack-built) with background instruments and custom privileged Firefox experiment APIs.
+- Modern CI (CodeQL, pre-commit, pytest matrix, conda caching), type checking (mypy), and container build workflows.
 
-The platform enables reproducible studies on:
+**Legacy Research Layer (Transitioning)**:
+- `TrackerProject/` – HB-specific crawling orchestration, A/B testing across 17 IAB verticals, bid harvesting (`pbjs.getBidResponses()`), ML pipelines for interest profile inference from bid patterns, and custom HB logging.
 
-- Bidder landscape and header bidding adoption across the web.
-- Impact of privacy extensions and tracker blocking on eCPM and win rates.
-- Potential for cross-site user profiling via observed bid patterns.
-- Privacy implications of real-time bidding systems.
+The platform enables reproducible studies on bidder landscape concentration, privacy extension impact on eCPM/win rates, and the privacy risks of RTB telemetry leakage.
 
 ---
 
-## Key Features
+## Key Features & Instrumentation
 
-| Component              | Capability                                                                 |
-|------------------------|----------------------------------------------------------------------------|
-| Browser Orchestration  | N browsers in parallel processes; synchronized (`**`) or sharded execution |
-| HTTP Instrumentation   | Full requests, responses, redirects, POST bodies, referrer, CSP, stack traces |
-| JavaScript Instrumentation | Property accesses, method calls, call stacks on sensitive APIs            |
-| Cookie Instrumentation | Both profile cookies and `document.cookie` / JS-set cookies                |
-| Header Bidding Harvest | Direct `pbjs.getBidResponses()` + winner extraction via injected scripts   |
-| Blocking Profiles      | uBlock Origin, Ghostery, Disconnect + custom entity blocklists for A/B     |
-| Data Export            | SQLite (primary), Apache Parquet (analytics), S3 support                   |
-| ML / Profiling         | Bid collection → feature extraction → synthetic profile generation & training |
-| A/B Experimentation    | Intent/volume/category + blocking variants with JSON state coordination    |
+| Component                    | Capability                                                                 | Security Notes |
+|------------------------------|----------------------------------------------------------------------------|----------------|
+| Browser Orchestration        | N parallel isolated Firefox instances via Selenium + geckodriver; synchronized or sharded execution | Process + profile isolation; watchdog for crash recovery |
+| HTTP Instrumentation         | Full requests, responses, redirects, POST bodies, headers, CSP, referrer, optional content + call stacks | High data sensitivity; bodies must be classified/redacted |
+| JavaScript Instrumentation   | Configurable property gets/sets/calls on sensitive APIs (fingerprinting collections + custom); recursion depth control; full call stacks via privileged `stackDump` | `unsafe-eval` and broad permissions required; page context untrusted |
+| Cookie & Navigation          | `document.cookie`, profile cookies, navigation events, DNS queries         | Cross-site tracking surface captured by design |
+| Header Bidding Harvest       | Injected `ScriptUtils` extraction of `pbjs.getBidResponses()`, winning bids, CPM, timeToRespond, bidder, adUnit | Executes researcher JS in page; results written to researcher-controlled FS/JSON |
+| Blocking & A/B Profiles      | uBlock Origin, Ghostery, Disconnect + custom entity lists for intent vs. no-intent experiments | Can materially affect observed publisher revenue |
+| Storage & Export             | SQLite (primary), Apache Parquet (analytics-ready), S3/GCS, LevelDB unstructured | No encryption at rest in default configuration |
+| ML / Profiling (Legacy)      | Bid feature extraction → synthetic user interest profiles → training pipelines | High re-identification risk; GDPR special-category inference possible |
+
+Full instrumentation settings: [docs/Configuration.md](docs/Configuration.md) and `schemas/js_instrument_settings.schema.json`.
 
 ---
 
-## Quick Start
+## Quick Start (Modern API)
 
-### Prerequisites (Legacy Environment)
+**Prerequisites (Recommended Path)**
 
-- Ubuntu 18.04+ (or equivalent)
-- Python 2.7 or 3.4–3.6 (hybrid support in original)
-- Root/sudo for Firefox + geckodriver installation
-
-**Strongly recommended**: Use the provided Docker images or a modernized fork with current Firefox + Playwright/CDP instrumentation.
+- Ubuntu 22.04+ / macOS (recent)
+- Python 3.10+
+- Conda (or Docker)
+- Current Firefox + geckodriver (installed via `./install.sh`)
 
 ```bash
-git clone https://github.com/<your-org>/headerbidding.git
-cd headerbidding
-./install.sh --no-flash   # WARNING: installs ancient Firefox 52 ESR
+git clone <repository-url> hb-update
+cd hb-update
+./install.sh                 # Creates conda env "openwpm", builds Extension, installs Firefox
+conda activate openwpm
 ```
 
-See [docs/Installation-Guide.md](docs/Installation-Guide.md) for development installs, Docker, and macOS variants.
-
-### Minimal Crawl Example (Core OpenWPM)
+**Minimal Modern Crawl Example**
 
 ```python
-from automation import CommandSequence, TaskManager
+from pathlib import Path
+from openwpm.config import ManagerParams, BrowserParams
+from openwpm.task_manager import TaskManager
+from openwpm.commands.browser_commands import GetCommand  # or CommandSequence wrapper
 
 NUM_BROWSERS = 2
+
+# Load hardened defaults (see docs/Configuration.md for all options)
+manager_params = ManagerParams(
+    num_browsers=NUM_BROWSERS,
+    data_directory=Path("./datadir/"),
+    log_path=Path("./datadir/"),
+)
+
+browser_params = [
+    BrowserParams(
+        http_instrument=True,
+        js_instrument=True,
+        js_instrument_settings=["collection_fingerprinting"],
+        cookie_instrument=True,
+        navigation_instrument=True,
+        display_mode="headless",
+        bot_mitigation=True,
+        # ublock_origin=True,  # enable via profile configuration
+    )
+    for _ in range(NUM_BROWSERS)
+]
+
+# Create isolated data directory
+manager_params.data_directory.mkdir(parents=True, exist_ok=True)
+
+tm = TaskManager(manager_params, browser_params)
+
 sites = ["https://example.com", "https://news.example.com"]
 
-manager_params, browser_params = TaskManager.load_default_params(NUM_BROWSERS)
-
-for i in range(NUM_BROWSERS):
-    browser_params[i]["http_instrument"] = True
-    browser_params[i]["js_instrument"] = True
-    browser_params[i]["cookie_instrument"] = True
-    browser_params[i]["headless"] = True
-
-manager = TaskManager.TaskManager(manager_params, browser_params)
-
 for site in sites:
-    cs = CommandSequence.CommandSequence(site)
-    cs.get(sleep=5, timeout=60)
-    cs.dump_profile_cookies(120)
-    manager.execute_command_sequence(cs, index="**")  # synchronized
+    # Modern command sequencing (see openwpm/commands/)
+    tm.execute_command_sequence(
+        site,
+        commands=[
+            GetCommand(url=site, sleep=5, timeout=60),
+            # Additional custom or built-in commands...
+        ],
+        index="**",  # synchronized across browsers
+    )
 
-manager.close()
+tm.close()  # Graceful shutdown + storage flush
 ```
 
-### Header Bidding Specific Usage
+See `demo.py` (legacy style), `crawler.py`, `custom_command.py`, and [docs/Usage-Guide.md](docs/Usage-Guide.md) for additional patterns. Header-bidding-specific bid harvesting logic resides in `TrackerProject/src/ScriptUtils/scriptUtils.py` and related crawlers.
 
-See `TrackerProject/src/crawling/doCrawl.py` and `TrackerProject/src/ScriptUtils/scriptUtils.py` for `pbjs` extraction patterns and the `TrainingCrawl` / A/B orchestration classes.
+**Rebuild Extension After Changes**
 
-Example bid extraction JS (injected at runtime):
-
-```js
-var responses = pbjs.getBidResponses();
-var winners = pbjs.getAllWinningBids();
-// ... per-bid record with cpm, bidder, timeToRespond, rendered flag
-```
-
-Results are written to structured JSON under researcher-defined `results/bids_{intent|no_intent}/` directories (paths require sanitization before use).
-
----
-
-## Project Structure
-
-```
-headerbidding/
-├── automation/                  # OpenWPM core (instrumentation + orchestration)
-│   ├── Commands/                # Browser commands (get, dump cookies, custom JS, etc.)
-│   ├── DataAggregator/          # Local / S3 / Parquet writers + schema
-│   ├── DeployBrowsers/          # Firefox profile, extensions (uBO, Ghostery, etc.), Selenium
-│   ├── Extension/firefox/       # Privileged instrumentation extension (HTTP, JS, cookies)
-│   ├── TaskManager.py           # Central orchestrator, watchdog, failure handling
-│   └── ...
-├── TrackerProject/
-│   ├── src/
-│   │   ├── crawling/            # doCrawl.py, launcher, site selection
-│   │   ├── HBLogging/           # HB-specific structured logger
-│   │   ├── ScriptUtils/         # getCpm.js, pbjsVersion.js, bid harvesting logic
-│   │   ├── ML/                  # Bid collection, profile generation, training
-│   │   ├── AB_Testing/          # Site lists (17 IAB categories), training/testing state
-│   │   └── config/              # browser_params.json / manager_params.json variants
-│   └── ...
-├── docs/                        # This professional documentation set
-├── demo.py
-├── Dockerfile / Dockerfile-dev
-├── install.sh / install-dev.sh
-├── requirements.txt
-├── VERSION
-└── README.md                    # This file
-```
-
-Full details: [docs/Architecture.md](docs/Architecture.md)
-
----
-
-## Configuration
-
-See [docs/Configuration.md](docs/Configuration.md) for:
-
-- `manager_params` vs `browser_params`
-- Enabling instruments (`http_instrument`, `js_instrument`, `cookie_instrument`)
-- Enabling privacy extensions and custom uBlock lists
-- Data directory, failure limits, output formats (local vs S3)
-- HB-specific A/B and ML configuration patterns
-
-Example hardened browser profile for measurement (research use only):
-
-```json
-{
-  "http_instrument": true,
-  "js_instrument": true,
-  "cookie_instrument": true,
-  "ublock-origin": true,
-  "headless": true,
-  "bot_mitigation": true
-}
+```bash
+./scripts/build-extension.sh
+# or
+cd Extension && npm run build
 ```
 
 ---
 
-## Data Model (High-Level)
+## Architecture at a Glance
 
-Primary tables / Parquet datasets produced:
+The system follows a multi-process Zero Trust-inspired research workload model:
 
-- `site_visits`
-- `http_requests`, `http_responses`, `http_redirects` (full headers + POST bodies + `req_call_stack`)
-- `javascript` (instrumented property gets/sets/calls + arguments + call stacks)
-- `javascript_cookies`, `profile_cookies`
-- Custom HB bid JSON files (bidder, cpm, adUnitCode, timeToRespond, rendered)
-- Crawl history and configuration snapshots
+- **TaskManager** (orchestrator): Command distribution, browser pool management, watchdog, failure budgets.
+- **BrowserManager** (per-instance): Selenium lifecycle, profile creation, extension injection, command execution, exception IPC.
+- **WebExtension** (privileged): Deep instrumentation via experiment APIs; bidirectional socket communication with Python side.
+- **StorageController**: Isolated writer process for structured (Parquet/SQL) and unstructured (LevelDB) backends; cloud providers optional.
+- **Legacy HB Layer**: `TrainingCrawl` / A/B state machines + ML pipelines operating on bid exports.
 
-See [docs/Architecture.md](docs/Architecture.md) for complete schema and data flow diagrams.
-
----
-
-## Documentation
-
-All documentation lives under `headerbidding/docs/`:
-
-- [Architecture.md](docs/Architecture.md) – System design, Mermaid diagrams, data flows
-- [Installation-Guide.md](docs/Installation-Guide.md)
-- [Usage-Guide.md](docs/Usage-Guide.md) – HB experiments, A/B testing, ML pipeline
-- [Security-and-Privacy.md](docs/Security-and-Privacy.md) – OWASP/NIST alignment, threat model, hardening
-- [Configuration.md](docs/Configuration.md)
-- [Development.md](docs/Development.md)
-- [Deployment.md](docs/Deployment.md)
-- [Troubleshooting.md](docs/Troubleshooting.md)
-
-Root-level governance:
-
-- [SECURITY.md](SECURITY.md)
-- [CONTRIBUTING.md](CONTRIBUTING.md)
+Detailed component responsibilities, data flows, security boundaries, and Mermaid diagrams: [docs/Architecture.md](docs/Architecture.md).
 
 ---
 
-## Contributing & Governance
+## Documentation Set
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/Development.md](docs/Development.md).
+All documentation follows enterprise standards for secure research systems.
 
-All contributions must address the documented security and modernization gaps. PRs that only add features without hardening or tests will be declined.
+**Core Technical Documentation** (in `docs/`):
+
+- [Architecture.md](docs/Architecture.md) – System design, component boundaries, data flows, Mermaid diagrams
+- [Security-Hardening.md](docs/Security-Hardening.md) – OWASP ASVS, NIST CSF, Zero Trust controls, privileged extension hardening, AI-agent orchestration guidelines, audit logging requirements
+- [Build-Process.md](docs/Build-Process.md) – Reproducible builds, extension compilation, dependency pinning, SBOM generation
+- [Configuration.md](docs/Configuration.md) – ManagerParams / BrowserParams, instrumentation settings, profile hardening
+- [Deployment.md](docs/Deployment.md) – Container, Kubernetes, air-gap, and cluster deployment patterns
+- [Troubleshooting.md](docs/Troubleshooting.md) – Common failure modes, debugging instruments, crash recovery
+
+**Governance & Operations** (repository root):
+
+- [docs/SECURITY.md](docs/SECURITY.md) – Vulnerability reporting, supported versions, disclosure policy
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) – Secure contribution process, review requirements
+- [docs/AI-Agent-Context.md](docs/AI-Agent-Context.md) – Central machine-readable context for AI coding agents (security rules, allowed operations, testing mandates)
+- [AGENTS.md](AGENTS.md) – Operational guidance for AI coding agents (build commands, known issues)
+- [docs/Security-and-Privacy.md](docs/Security-and-Privacy.md) – Existing threat model (complementary to the new hardening guide)
+
+Additional Sphinx documentation (API, schemas, papers) is available under `docs/`.
 
 ---
 
-## Acknowledgments
+## Development & Testing
 
-This project is derived from the original [OpenWPM](https://github.com/mozilla/OpenWPM) framework developed by the Princeton University Center for Information Technology Policy (CITP) and Mozilla.
+Follow [AGENTS.md](AGENTS.md) for day-to-day commands.
 
-Header bidding extensions were developed for academic research into the privacy, security, and economic properties of real-time advertising auctions.
+```bash
+# Full test suite (multi-process, requires display or xvfb)
+pytest -m "not slow" -n auto
+
+# Pre-commit (lint, typecheck, formatting)
+pre-commit run --all-files
+
+# Extension only
+cd Extension && npm run lint && npm run build
+```
+
+See [docs/Build-Process.md](docs/Build-Process.md) for supply-chain security requirements (pinning, CodeQL, SBOM).
 
 ---
 
-## License
+## Contributing
 
-Mozilla Public License 2.0. See [LICENSE](LICENSE) for full text.
+All contributions **must** improve security posture, test coverage, or modernization progress. PRs that introduce features without corresponding hardening, documentation, or tests will be rejected.
+
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) and [docs/Development.md](docs/Development.md).
 
 ---
 
-**Maintained for research transparency and reproducibility. Not intended for operational ad-tech use.**
+## License & Acknowledgments
 
-For questions on responsible use or modernization, open an issue with the `security` or `modernization` label.
+Mozilla Public License 2.0. See [LICENSE](LICENSE).
+
+This platform is derived from OpenWPM, originally developed by the Princeton University Center for Information Technology Policy (CITP) and Mozilla. Header bidding research extensions were created to study the privacy, security, and economic properties of real-time advertising auctions.
+
+**Maintained for research transparency, reproducibility, and responsible disclosure of ad-tech measurement risks. Not for operational or commercial use without major remediation.**
+
+For questions on responsible use or the modernization program, open an issue with the `security` or `modernization` label.

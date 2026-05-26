@@ -1,134 +1,179 @@
 # Deployment Guide
 
-**HeaderBidding Research Platform**  
-**Version**: 0.8.0-hb (research snapshot)  
-**Date**: 2026-04
-
-This guide describes how to run measurement workloads safely and repeatably. The current legacy stack makes "production" deployment inherently risky.
-
----
-
-## 1. Deployment Tiers
-
-| Tier | Isolation | Recommended For | Risk Level |
-|------|-----------|------------------|------------|
-| **Tier 0 – Local Dev** | Laptop + Docker | Prototyping only | Very High |
-| **Tier 1 – Research VM** | Dedicated cloud VM, no inbound, strict egress | Pilot experiments | High |
-| **Tier 2 – Hardened Research Cluster** | Kubernetes + network policies + dedicated storage | Production research runs | Medium (after Phase 1–2 hardening) |
-| **Tier 3 – Modernized** | Current browser automation + proper orchestration | Long-term serious research | Target |
-
-**Never** deploy the legacy version on any multi-tenant or internet-facing system.
+**hb-update: Header Bidding Research Platform**  
+**Version**: 1.1.0  
+**Date**: 2026-04-26  
+**Full Path**: `docs/Deployment.md`
 
 ---
 
-## 2. Container Deployment (Current Best Practice)
+## 1. Deployment Principles
 
-### 2.1 Dockerfile Analysis
+All deployments **must** follow Zero Trust and least-privilege principles as defined in [Security-Hardening.md](docs/Security-Hardening.md).
 
-The provided `Dockerfile` and `Dockerfile-dev` copy the automation layer and run `install.sh`. They do **not** include TrackerProject by default and bake in the vulnerable Firefox 52.
+**Never** deploy this platform on:
+- Personal developer laptops with production credentials
+- Multi-tenant shared infrastructure without strong namespace isolation
+- Public cloud VMs with default egress
 
-**Improved pattern** (create `Dockerfile.hardened`):
+**Recommended Tiers**:
+1. **Development** – Local hardened workstation or dev cluster namespace
+2. **Research Production** – Dedicated Kubernetes cluster or air-gapped hardware with egress proxy
+3. **High-Sensitivity / Regulatory** – Air-gapped with measured boot and confidential computing
+
+---
+
+## 2. Local Hardened Workstation
+
+### Minimum Controls
+- Full-disk encryption (LUKS/FileVault)
+- Dedicated non-root user (`researcher`)
+- `data_directory` on a separate encrypted volume or LUKS container
+- Egress forced through a local allow-list proxy (e.g., mitmproxy with block list or tinyproxy)
+- Browser launched in `xvfb` or headless mode for most runs
+
+### Quick Commands
+```bash
+# Recommended local invocation
+mkdir -p /secure/research/hb-2026-Q2/datadir
+chmod 0700 /secure/research/hb-2026-Q2/datadir
+
+python -m openwpm.task_manager ...  # or via your experiment script
+```
+
+---
+
+## 3. Docker Deployment (Current & Target)
+
+**Current Dockerfiles** (`Dockerfile`, `Dockerfile-dev`) are legacy and reference the old `automation/` layout. They must be updated before trusted use.
+
+**Target Hardened Dockerfile Pattern** (to be implemented):
 
 ```dockerfile
-FROM ubuntu:18.04 AS builder
-# ... (install build deps only)
+# syntax=docker/dockerfile:1.7
+FROM ubuntu:22.04 AS base
 
-FROM ubuntu:18.04
-# Create non-root user
-# Copy only what is needed
-# Install security updates (as much as possible on old base)
-# Copy research code
-# Set strict umask, no shell history, etc.
-USER research
-ENTRYPOINT ["python", "-m", "hb_orchestrator"]
+# Create non-root user early
+RUN useradd -m -u 10001 -s /bin/bash researcher && \
+    mkdir -p /opt/hb-update && chown researcher:researcher /opt/hb-update
+
+WORKDIR /opt/hb-update
+USER researcher
+
+# Copy only what is needed (after modernized install)
+COPY --chown=researcher:researcher openwpm/ openwpm/
+COPY --chown=researcher:researcher Extension/ Extension/
+# ... minimal set
+
+# Install with --no-root escalation
+RUN ./scripts/install-modern.sh --non-interactive
+
+# Drop all capabilities
+USER 10001
 ```
 
-### 2.2 Runtime Flags (Mandatory)
-
+Run with:
 ```bash
-docker run \
-  --rm \
-  --read-only \
+docker run --rm \
   --security-opt no-new-privileges:true \
   --cap-drop=ALL \
-  --cap-add=NET_BIND_SERVICE \   # only if truly needed
-  --network=research-only \
-  --pids-limit 200 \
-  --memory 8g \
-  --cpus 4 \
-  -v /secure/research/results/2026-04-exp:/results:rw \
-  -v /secure/research/config:/config:ro \
-  -e HB_EXPERIMENT_ID=2026-04-exp-07 \
-  -e RESULTS_ROOT=/results \
-  headerbidding:legacy
+  --network=research-net \
+  -v /secure/research/datadir:/datadir:ro \
+  hb-update:0.8.0-hb \
+  python -m your_experiment --headless
 ```
 
 ---
 
-## 3. Kubernetes / Orchestration Considerations
+## 4. Kubernetes Deployment (Recommended)
 
-For serious scale:
+### Namespace Isolation
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hb-research
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+```
 
-- Use a dedicated node pool with taints.
-- NetworkPolicy that denies all egress except to measurement targets + your result store.
-- PersistentVolumeClaims with encryption at rest (LUKS or cloud KMS).
-- Init containers that validate config (no hardcoded personal paths, no world-readable secrets).
-- Sidecar for log shipping + security monitoring.
-- CronJob or Argo Workflow for scheduled experiment batches.
-- Never mount the Docker socket.
+### NetworkPolicy (Mandatory)
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hb-egress-only
+  namespace: hb-research
+spec:
+  podSelector: {}
+  policyTypes: ["Egress"]
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: research-proxy
+    ports:
+    - protocol: TCP
+      port: 8080   # proxy
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: storage
+    ports:
+    - protocol: TCP
+      port: 443
+```
 
----
-
-## 4. Secrets & Configuration Management
-
-- Never bake S3 keys, researcher credentials, or block list signing keys into images.
-- Use Kubernetes Secrets + SealedSecrets or external vault (HashiCorp, AWS Secrets Manager).
-- Mount experiment definitions as ConfigMaps.
-- All result paths must be driven by `HB_EXPERIMENT_ID` + `RESULTS_ROOT`.
-
----
-
-## 5. Data Lifecycle in Deployment
-
-1. **Ingestion** → Local encrypted volume or S3 with bucket policy + KMS + object lock.
-2. **Processing** → Ephemeral analysis pods that receive only redacted/aggregated subsets.
-3. **Archival** → Write-once object storage with retention tags.
-4. **Deletion** → Cryptographic shred + object expiration + audit log entry.
-
-Implement automated enforcement – do not rely on researchers remembering to `rm -rf`.
-
----
-
-## 6. Monitoring & Alerting in Production Research Runs
-
-- Crawl progress (sites completed / hour, bid yield rate).
-- Resource saturation (memory pressure on old Firefox is the #1 cause of silent data loss).
-- Security signals: unexpected outbound connections, large file writes, anomalous CPM distributions (possible site cloaking or data corruption).
-- Cost tracking (especially cloud egress for S3 + browser instances).
-
----
-
-## 7. Rollback & Reproducibility
-
-Tag every experiment run with:
-
-- Git SHA of the orchestrator
-- Full `browser_params` + `manager_params` (persisted to DB)
-- Container image digest
-- Site list version / commit
-
-This enables exact reproduction (within the limits of live web non-determinism).
+### TaskManager Job Example (Skeleton)
+- One Job per experiment
+- `securityContext.runAsNonRoot: true`
+- `readOnlyRootFilesystem: true` (with emptyDir for scratch)
+- Resource limits (memory especially important due to browser bloat)
+- Init container to inject signed allow-list and capability token
 
 ---
 
-## 8. Incident Response in Deployed Environments
+## 5. Air-Gapped & High-Security Deployments
 
-See the IR section in [Security-and-Privacy.md](docs/Security-and-Privacy.md). In deployment terms:
-
-- Automated snapshot of the pod/VM disk on anomaly detection.
-- Immediate network quarantine via security group / network policy change.
-- Page the research data steward (not just the engineer who started the run).
+1. Export signed allow-list JSON and site seeds via one-way diode or signed USB.
+2. Import only redacted aggregate results.
+3. No S3/GCS; all storage on encrypted local volumes or approved offline NAS.
+4. Measured boot / TPM attestation of the research image.
+5. Physical or virtual air-gap with strict change control.
 
 ---
 
-**Related**: [Troubleshooting.md](docs/Troubleshooting.md) for operational problems observed in real runs.
+## 6. Egress Proxy (Non-Negotiable in All Networked Deployments)
+
+The platform **must** be deployed behind an allow-listing, logging proxy.
+
+Recommended implementations:
+- mitmproxy in upstream mode with custom block script
+- Squid with url_rewrite_program + logging
+- Cloudflare Gateway or corporate secure web gateway (for institutional use)
+
+All browser traffic (including the privileged extension sockets if they ever leave localhost) must be forced through this proxy via PAC or container network rules.
+
+---
+
+## 7. Monitoring & Observability in Production Research
+
+- Prometheus + Grafana for browser process resource usage
+- Centralized logging of the structured security events defined in Security-Hardening.md §7
+- Automatic alerting on memory anomalies, unexpected external domains, or watchdog restarts
+
+---
+
+## 8. Rollback & Reprovisioning
+
+Research environments must be treated as ephemeral. After any suspected incident or at the end of a major study:
+1. Terminate all browser processes
+2. Wipe `data_directory` (secure delete if required by DPIA)
+3. Reprovision from a known-good, version-pinned image or git commit + `install.sh`
+4. Rotate any cloud credentials used
+
+---
+
+**Deployment without the controls in Security-Hardening.md §5 is a policy violation.**
+
+*Full path*: `docs/Deployment.md`

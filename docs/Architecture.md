@@ -1,264 +1,339 @@
-# Architecture
+# Architecture Specification
 
-**HeaderBidding Research Platform – Technical Architecture**  
-**Version**: 0.8.0-hb (research snapshot)  
-**Date**: 2026-04  
-**Status**: Legacy research codebase with documented gaps
-
----
-
-## 1. Executive Summary
-
-The HeaderBidding platform is a **measurement and experimentation harness** for studying real-time header bidding (HB) auctions. It is a specialized fork/extension of OpenWPM that adds Prebid.js (`pbjs`) telemetry extraction, A/B blocking experiments, and ML-based bid profile generation.
-
-**Core Principle**: Launch many instrumented, isolated browser instances in parallel, drive them through reproducible command sequences against curated site lists, and capture the maximum observable surface of HTTP, JavaScript, cookie, and advertising auction activity.
-
-**Primary Data Products**:
-- Rich HTTP + JS + cookie telemetry (privacy measurement)
-- Detailed per-bid records (bidder, CPM, latency, win/loss, ad unit)
-- Derived user interest profiles from bid patterns
+**hb-update: Header Bidding Research Platform**  
+**Document Version**: 1.1.0  
+**Date**: 2026-04-26  
+**Status**: Authoritative technical architecture for the modernized platform  
+**Related Documents**: [Security-Hardening.md](docs/Security-Hardening.md), [Configuration.md](docs/Configuration.md), [AGENTS.md](AGENTS.md)
 
 ---
 
-## 2. High-Level System Architecture
+## 1. Executive Summary & Architectural Principles
+
+hb-update is a **distributed, multi-process research measurement platform** specialized for deep instrumentation of web advertising auctions (Header Bidding / Prebid.js) while retaining the general web privacy measurement capabilities of its OpenWPM foundation.
+
+**Core Design Goals**:
+- **Maximum observability** of HTTP, JavaScript execution, cookies, DNS, and real-time bidding telemetry.
+- **Reproducibility** and parallelism at scale (dozens to thousands of browsers).
+- **Researcher safety and data protection** through explicit security boundaries, isolation, and auditability (see Security-Hardening.md).
+- **Extensibility** via a typed command model and pluggable storage backends.
+
+**Guiding Principles** (Security-First):
+- Least privilege for every browser instance and every command sequence.
+- Explicit trust boundaries between untrusted web content, the privileged extension, the Python orchestration layer, and persistent storage.
+- Fail-closed: unknown sites, unknown commands, and anomalous behavior are rejected.
+- Auditability: every significant action is logged with correlation identifiers.
+- Defense in depth: process isolation + network policy + profile sandboxing + data redaction.
+
+The platform is currently in a **hybrid modernization state**:
+- **Modern core**: `openwpm/` (Python 3.10+), TypeScript `Extension/`, modern CI, dataclasses configuration.
+- **Legacy research layer**: `TrackerProject/` (HB-specific A/B testing, ML pipelines, file-based coordination with known integrity and path issues).
+
+All new development must occur in the modern core. Legacy components are scheduled for migration or retirement.
+
+---
+
+## 2. System Context (C4-Style)
+
+```mermaid
+C4Context
+    title System Context - hb-update Research Platform
+
+    Person(researcher, "Researcher / AI Agent", "Defines experiments, allow-lists, and purpose tags")
+    System_Boundary(platform, "hb-update Platform") {
+        System(taskmanager, "TaskManager + StorageController", "Orchestration & data plane")
+        System_Ext(firefox, "Instrumented Firefox\n+ Privileged Extension", "Measurement boundary")
+    }
+    System_Ext(web, "Target Websites\n(allow-listed only)", "Untrusted content")
+    System_Ext(storage, "Local FS / S3 / GCS\n/ Parquet", "Telemetry & bid data")
+    System_Ext(proxy, "Egress Proxy\n(allow-list + logging)", "Network boundary (recommended)")
+
+    Rel(researcher, taskmanager, "Submits signed task manifests\nwith capability tokens", "HTTPS / local IPC")
+    Rel(taskmanager, firefox, "Launches + drives via Selenium\n+ bidirectional sockets", "Local process + WebSocket-like")
+    Rel(firefox, web, "Fetches & executes\n(HTTP/HTTPS/WS)", "Untrusted")
+    Rel(firefox, taskmanager, "Streams HTTP/JS/Cookie/DNS\n+ HB bid events", "Binary socket protocol")
+    Rel(taskmanager, storage, "Writes structured records\n& unstructured artifacts", "Parquet/SQL/JSON")
+    Rel(firefox, proxy, "All outbound traffic\n(forced via policy)", "HTTP/SOCKS")
+    Rel(proxy, web, "Filtered & logged", "")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4ShapeInBoundary="2")
+```
+
+**Key External Entities**:
+- Researcher or AI Agent: Supplies allow-lists and purpose; receives redacted/aggregated results.
+- Egress Proxy (mandatory in hardened deployments): Enforces destination policy and provides network audit trail.
+
+---
+
+## 3. High-Level Component Architecture & Trust Boundaries
 
 ```mermaid
 flowchart TB
-    subgraph Orchestration
-        TM[TaskManager]
-        WD[Watchdog Thread]
-        LS[MPLogger Server]
+    subgraph External["External / Untrusted"]
+        SITES[Target Sites\n(allow-listed)]
     end
 
-    subgraph Workers
-        B1[BrowserManager #1<br/>+ Selenium + geckodriver]
-        B2[BrowserManager #N]
+    subgraph MeasurementBoundary["Measurement Boundary (High Privilege)"]
+        direction TB
+        FF[Firefox +<br/>WebExtension<br/>(privileged experiment APIs)]
+        subgraph Extension["Extension (TypeScript)"]
+            BG[Background Scripts<br/>(HTTP, JS, Cookie, DNS, Nav instruments)]
+            PRIV[Privileged APIs<br/>sockets / profileDirIO / stackDump]
+        end
     end
 
-    subgraph InstrumentedBrowsers
-        FF1[Firefox +<br/>Instrumentation Extension]
-        FF2[Firefox +<br/>Instrumentation Extension]
+    subgraph Orchestration["Orchestration Layer (Trusted)"]
+        BM[BrowserManager<br/>(per browser process)]
+        TM[TaskManager<br/>(orchestrator + watchdog)]
+        SC[StorageController<br/>(isolated writer)]
     end
 
-    subgraph DataPlane
-        DA[DataAggregator<br/>(Local / S3)]
-        SQLite[(SQLite)]
-        Parquet[Parquet Files]
+    subgraph Data["Data & Storage Layer"]
+        SQLITE[(SQLite)]
+        PARQUET[(Parquet<br/>datasets)]
+        LEVELDB[(LevelDB<br/>unstructured)]
+        CLOUD[(S3 / GCS)]
     end
 
-    subgraph HBLayer[Header Bidding Research Layer]
-        TC[TrainingCrawl /<br/>A/B Orchestrator]
-        SU[ScriptUtils<br/>pbjs injection]
-        HBL[HBLogger]
-        ML[ML Pipeline<br/>Bid Collection →<br/>Profile Gen → Training]
+    subgraph Legacy["Legacy HB Research Layer (Transitioning)"]
+        TP[TrackerProject<br/>TrainingCrawl / A/B / ML]
+        HBJSON[Bid JSON files<br/>(race-prone)]
     end
 
-    Sites[Target Sites<br/>(Alexa categories +<br/>custom lists)] -->|CommandSequence.get| FF1
-    Sites --> FF2
+    SITES -->|untrusted content| FF
+    FF <-->|binary socket protocol| BM
+    BM <-->|queues + dill/pickle IPC| TM
+    TM -->|commands| BM
+    BM -->|telemetry records| SC
+    SC -->|append-only writes| SQLITE & PARQUET & LEVELDB & CLOUD
 
-    TM -->|spawn + queues| B1
-    TM --> B2
-    TM --> DA
-    TM --> LS
-    WD -.->|memory / orphan<br/>process checks| B1
+    TP -.->|site batches +<br/>custom JS| TM
+    TP -->|bid harvesting<br/>via execute_script| FF
+    FF -->|raw pbjs objects| TP
+    TP -->|JSON state machines| HBJSON
 
-    B1 <-->|socket / dill| FF1
-    B2 <--> FF2
-
-    FF1 -->|instrumented events| DA
-    FF2 --> DA
-
-    TC -->|site batches +<br/>config variants| TM
-    SU -->|execute_script<br/>getBidResponses| FF1
-    SU --> FF2
-    HBL -->|structured logs| LocalLogs[(logs/)]
-    ML -->|features / labels| SQLite
-    ML --> Parquet
-
-    classDef core fill:#e3f2fd,stroke:#1565c0
-    classDef hb fill:#fff3e0,stroke:#e65100
-    class TM,DA,B1,FF1 core
-    class TC,SU,ML hb
+    classDef untrusted fill:#ffebee,stroke:#c62828
+    classDef measurement fill:#fff8e1,stroke:#f57c00
+    classDef trusted fill:#e8f5e9,stroke:#2e7d32
+    classDef legacy fill:#fce4ec,stroke:#ad1457
+    class SITES untrusted
+    class FF,PRIV,Extension measurement
+    class TM,BM,SC trusted
+    class TP,HBJSON legacy
 ```
 
-**Key Processes** (all isolated via `multiprocess`):
+**Trust Boundaries** (critical for Zero Trust):
 
-- **TaskManager** (main process): Coordinates, failure handling, aggregator launch, command distribution.
-- **BrowserManager(s)**: One per browser. Manages Selenium/Firefox lifecycle, profile, extension injection, command execution.
-- **DataAggregator**: Single process serializing records to storage (avoids DB contention).
-- **MPLogger**: Centralized structured logging across all processes.
-- **HB Orchestration** (Python): `TrainingCrawl`, custom JSON state machines for A/B coordination.
-
----
-
-## 3. Core OpenWPM Component Responsibilities
-
-| Component                    | File(s)                              | Responsibility                                                                 | Security Boundary |
-|------------------------------|--------------------------------------|----------------------------------------------------------------------------------|-------------------|
-| `TaskManager`                | `automation/TaskManager.py`          | Lifecycle, browser pool, command fan-out, aggregator, failure limit, watchdog   | Process isolation |
-| `Browser` (BrowserManager)   | `automation/BrowserManager.py`       | Firefox launch via Selenium, profile management, extension loading, command IPC | OS process + profile |
-| `CommandSequence`            | `automation/CommandSequence.py`      | Declarative visit scripts (`get`, `dump_profile_cookies`, `run_custom_function`) | None (data only) |
-| `DataAggregator` (Local/S3)  | `automation/DataAggregator/`         | Record queuing, Parquet/SQLite writes, schema enforcement                        | File / S3 creds |
-| Instrumentation Extension    | `automation/Extension/firefox/`      | Privileged (chrome) hooks for `http-on-*`, JS `instrumentObject`, cookie changes | Runs as browser chrome |
-| `ScriptUtils`                | `TrackerProject/src/ScriptUtils/`    | Prebid.js bid harvesting + version detection injected via `execute_script`       | Page context (untrusted) |
+1. **Untrusted Web Content** ↔ **Measurement Boundary** (extension): Full attack surface. Mitigated by Firefox sandbox + extension CSP + instrument allow-lists.
+2. **Measurement Boundary** ↔ **Orchestration Layer**: Socket protocol + command serialization. Authenticated locally via port and process identity.
+3. **Orchestration** ↔ **Storage**: Isolated StorageController process prevents direct DB contention and provides a single serialization point.
+4. **Legacy Layer** ↔ **Everything**: Lowest trust. File-based coordination is a known integrity and availability weakness.
 
 ---
 
-## 4. Header Bidding Measurement Pipeline
+## 4. Runtime Process Model
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Orchestrator as TrainingCrawl / Launcher
-    participant TM as TaskManager
-    participant BM as BrowserManager
-    participant FF as Instrumented Firefox
-    participant PBJS as Page (pbjs global)
-    participant SU as ScriptUtils
-    participant DA as DataAggregator
-    participant FS as Result JSON / SQLite
+    participant R as Researcher / AI Agent
+    participant TM as TaskManager (main)
+    participant WD as Watchdog Thread
+    participant BM as BrowserManager (N instances)
+    participant FF as Firefox + Extension
+    participant SC as StorageController
+    participant ST as Storage (Parquet/SQL)
 
-    Orchestrator->>TM: init with AB/ML config + site batches
-    TM->>BM: launch N browsers + load extension
-    Orchestrator->>TM: CommandSequence(site)
-    TM->>BM: execute "get" + sleep
-    BM->>FF: navigate
-    FF->>PBJS: page loads Prebid.js auction
-    Orchestrator->>TM: run_custom_function(SU.getCpm)
-    TM->>BM: execute_script(GET_CPM)
-    BM->>FF: eval in page context
-    FF->>PBJS: pbjs.getBidResponses() + getAllWinningBids()
-    PBJS-->>FF: array of bid objects (cpm, bidder, adId, timeToRespond...)
-    FF-->>BM: result
-    BM-->>SU: raw bid list
-    SU->>FS: write structured JSON (bids_{intent}/ + testingDone.json mutex)
-    SU->>DA: (optional) also persist via crawl commands
-    Note over SU,FS: File-based coordination (race-prone)
+    R->>TM: Task manifest (allow-list, instruments, purpose, budget)
+    TM->>TM: Validate manifest + capability token
+    TM->>SC: Start (isolated process)
+    loop for each browser
+        TM->>BM: spawn (multiprocessing)
+        BM->>FF: launch via Selenium + load extension
+        FF->>BM: socket port + ready
+    end
+    TM->>WD: Start watchdog (memory, orphan detection)
+
+    loop for each CommandSequence
+        R->>TM: execute_command_sequence (site, commands, index="**")
+        TM->>BM: dispatch (synchronized or sharded)
+        BM->>FF: navigate + instrument enable
+        FF->>FF: execute page + Prebid auction
+        FF->>BG: webRequest / JS hooks fire
+        BG->>BM: telemetry events (via sockets)
+        BM->>SC: queue records
+        SC->>ST: batched write
+        FF-->>BM: page load complete + optional custom JS result
+    end
+
+    TM->>BM: shutdown signal
+    BM->>FF: close
+    TM->>SC: flush + close
+    TM->>R: crawl summary + correlation IDs
 ```
 
-**Bid Record Example** (from `scriptUtils.py`):
-
-```json
-{
-  "bid": { ...full Prebid bid object... },
-  "adunit": "div-gpt-ad-xxx",
-  "adId": "...",
-  "bidder": "appnexus",
-  "time": 187,
-  "cpm": 2.35,
-  "msg": "Bid available",
-  "rendered": true
-}
-```
+**Process Isolation Guarantees**:
+- Each BrowserManager runs in its own OS process.
+- StorageController is deliberately isolated to serialize writes.
+- MPLogger provides cross-process structured logging.
+- Watchdog can terminate and restart individual browsers without killing the entire run.
 
 ---
 
-## 5. A/B Testing & Experiment Matrix
+## 5. Data Flow & Sensitivity
 
-The `AB_Testing` and `config/` layers support factorial experiments:
-
-- **Intent dimension**: `INTENT` vs `NO_INTENT` (different site subsets + behavioral signals)
-- **Blocking dimension**: Multiple uBlock/Disconnect/Ghostery variants (alphabet, facebook, pubmatic, etc.)
-- **Category dimension**: 17 verticals (News, Shopping, Health, Adult, ...)
-
-State is coordinated via shared JSON files (`trainingDone.json`, `testingDone.json`, `writing.json`) – this is a **major architectural smell** (see Security & Limitations sections).
-
----
-
-## 6. Data Model & Storage
-
-### Primary Telemetry (Parquet / SQLite)
-
-Defined in `automation/DataAggregator/parquet_schema.py`:
-
-- `site_visits` (visit_id, crawl_id, site_url)
-- `http_requests` (full headers, post_body, req_call_stack, third-party flags, content_policy_type)
-- `http_responses` + `http_redirects`
-- `javascript` (symbol, operation, value, arguments, call_stack, script_url)
-- `javascript_cookies` + `profile_cookies` (detailed expiry, HttpOnly, Secure, etc.)
-- `crawl_history`, `flash_cookies`
-
-### Header Bidding Specific
-
-- Researcher-defined JSON trees under `results/bids_{intent|no_intent}/<site>_<variant>.json`
-- ML artifacts: `generatedProfiles.csv`, training mutex JSONs, analysis results
-
-**Privacy Sensitivity**: HTTP bodies + JS values + cookies + bid CPMS can contain or enable reconstruction of PII and detailed interest profiles.
-
----
-
-## 7. Security & Isolation Architecture (Current State)
+### 5.1 Primary Telemetry Flow
 
 ```mermaid
 flowchart LR
-    subgraph Host
-        Docker[Docker Container<br/>(ubuntu:18.04)]
-    end
-    subgraph Container
-        Python[Python Orchestrator]
-        FF[Firefox 52 ESR<br/>(many CVEs)]
-        Ext[Privileged Extension<br/>(Add-on SDK)]
-    end
-    subgraph External
-        Internet[Arbitrary Third-Party Sites]
+    subgraph Page["Page Context (Untrusted)"]
+        PBJS[Prebid.js Auction]
+        SENS[Sensitive JS APIs<br/>canvas, webgl, audio, fonts...]
     end
 
-    Python -->|Selenium/geckodriver| FF
-    FF -->|privileged APIs| Ext
-    FF <-->|network| Internet
-    Ext -->|raw events| Python
-    Python -->|raw bids + cookies| LocalFS
+    subgraph Extension["Extension Chrome (Privileged)"]
+        HTTP[http-instrument]
+        JS[js-instrument + stackDump]
+        CK[cookie-instrument]
+        DNS[dns-instrument]
+    end
 
-    classDef risky fill:#ffcdd2,stroke:#b71c1c
-    class FF,Ext risky
+    HTTP -->|req/resp + body + callstack| Q1[(In-memory queue)]
+    JS -->|property access + args + stack| Q1
+    CK -->|set + profile cookies| Q1
+    DNS -->|lookups| Q1
+
+    Q1 -->|binary socket| SC[StorageController]
+    SC -->|schema validation| PARQUET[Parquet<br/>site_visits, http_requests,<br/>javascript, cookies...]
+    SC -->|optional| REDACT[Redaction Pipeline<br/>(PII, bodies, high-entropy)]
+    REDACT --> CLOUD[(S3/GCS<br/>encrypted buckets)]
+
+    classDef sensitive fill:#ffcdd2
+    class PBJS,SENS sensitive
 ```
 
-**Current Isolation**:
-- Process separation between Python workers and browsers (good).
-- No seccomp, no user namespaces, no outbound proxy enforcement by default.
-- Extension runs with chrome privileges inside an ancient browser.
-- File-based IPC between crawl workers (no authentication, TOCTOU).
+### 5.2 Header Bidding Harvest Flow (Legacy Path)
 
-See [Security-and-Privacy.md](docs/Security-and-Privacy.md) for detailed threat model mapped to OWASP Top 10 / ASVS / NIST CSF.
+1. `TrainingCrawl` selects site batch + A/B variant.
+2. CommandSequence includes `run_custom_function(ScriptUtils.getCPM)`.
+3. In page context: `pbjs.getBidResponses()` + `getAllWinningBids()` executed.
+4. Results returned to Python, written to `results/bids_{intent}/...` as JSON + `testingDone.json` mutex.
+5. ML pipeline later reads these files for feature extraction.
 
----
+**Known Weaknesses**: Race conditions on mutex files, no schema enforcement on bid objects, absolute paths.
 
-## 8. Known Architectural & Implementation Limitations
+### 5.3 Data Sensitivity Classification (Mandatory)
 
-1. **Hardcoded Researcher Paths**: >50 occurrences of `/home/johncook/headerBidding/...` and `/mnt/hgfs/...` in TrackerProject and extension storage files. Destroys portability and leaks environment.
-2. **Deprecated Browser Stack**: Firefox 52 + Add-on SDK + old Selenium. Blocks modern instrumentation (WebDriver BiDi, CDP, Playwright).
-3. **Brittle Coordination**: JSON "mutex" files (`writing.json`, `testingDone.json`) instead of proper task queue (Celery/RQ/Redis) or database-backed state machine. High risk of lost or duplicate data.
-4. **Incomplete Error Handling & Recovery**: Many broad `except: pass` blocks in crawl paths; no circuit breakers.
-5. **No Type Safety or Contracts**: Dynamic dict passing for params; no Pydantic / dataclasses / Protocol usage.
-6. **ML Pipeline Not Productionized**: No feature store, no experiment tracking (MLflow), no model versioning, scripts assume local CSV/SQLite.
-7. **Scalability Ceiling**: Single-machine multi-process model. No Kubernetes operator, no horizontal browser farm.
-8. **Data Governance Vacuum**: No automated PII redaction, retention policies, or differential privacy mechanisms on profile outputs.
+| Data Category | Examples | Sensitivity | Required Controls |
+|---------------|----------|-------------|-------------------|
+| Raw HTTP bodies & headers | POST data, auth tokens (accidental), referrers | High | Redact by default; encrypt at rest; short retention |
+| JS call stacks + arguments | Fingerprinting vectors, PII in strings | High | Hash or truncate; never feed raw to LLMs |
+| Bid telemetry (CPM, bidder, adUnit) | Precise revenue signals + interest inference | High (regulatory) | Classification label + purpose limitation |
+| Cookies (document + profile) | Tracking identifiers, login state | High | Hash where possible; never export raw |
+| Derived ML profiles | Interest vectors from bids | Critical | Separate access control; DPIA required |
 
----
-
-## 9. Recommended Modern Target Architecture (2026+)
-
-For any serious continuation of this research:
-
-- Replace Firefox 52 + Selenium with **Playwright + Chromium/Firefox BiDi** or **Chrome DevTools Protocol** direct instrumentation.
-- Use **Apache Airflow / Prefect / Dagster** or **Ray** for experiment orchestration instead of custom `TrainingCrawl`.
-- Replace file mutexes with **PostgreSQL + Redis** task state + message queues.
-- Instrument via **trusted CDP / BiDi** rather than privileged extensions where possible.
-- Add **OpenTelemetry** + structured event schemas for all HB telemetry.
-- Store bid events in **Parquet + Iceberg** on S3 with time-based partitioning and column-level encryption for sensitive fields.
-- Introduce **policy-as-code** (OPA) for site allow-listing and data export rules.
+All storage schemas (see `openwpm/storage/parquet_schema.py` and `schema.sql`) must carry sensitivity annotations in future revisions.
 
 ---
 
-## 10. References & Further Reading
+## 6. Configuration & Command Model
 
-- OpenWPM original architecture papers (CITP, Princeton)
-- Prebid.js bidder documentation and `getBidResponses()` contract
-- IAB Tech Lab OpenRTB / AdCOM specifications
-- OWASP Web Security Testing Guide – Browser Automation & Crawler Risks
+**Modern Configuration** (dataclasses – see `openwpm/config.py`):
+
+- `ManagerParams`: `num_browsers`, `data_directory`, `log_path`, failure limits, storage backend selection.
+- `BrowserParams`: per-browser instrumentation toggles, `js_instrument_settings` (list of collections or custom dicts), `display_mode`, profile seeds, prefs, blocking extensions.
+
+**Command Model**:
+- Commands inherit from `BaseCommand` and implement `execute()`.
+- Built-ins: `GetCommand`, cookie dumps, custom JS execution, profile archiving.
+- Custom commands are the primary extension point for HB-specific logic.
+
+**Security Contract**:
+- Every command sequence must be validated against the active allow-list and capability token before any browser navigation occurs.
+- Instrument flags are immutable after browser launch (prevent privilege escalation mid-crawl).
 
 ---
 
-**Document Maintenance**: Update this architecture document whenever core data flows, new instruments, or major HB experiment patterns are added. Outdated architecture docs are a documentation security risk.
+## 7. Storage Architecture
 
-**Next**: Read [Security-and-Privacy.md](docs/Security-and-Privacy.md) for the comprehensive threat model and hardening requirements.
+- **Structured**: Parquet (preferred for analytics) + SQLite (operational). Schemas must stay in sync (`parquet_schema.py` ↔ `schema.sql`).
+- **Unstructured**: LevelDB for large blobs or raw content (when `save_content` enabled).
+- **Cloud**: Optional S3/GCS providers with server-side encryption + bucket policies.
+- **Isolation**: All writes go through the single StorageController process.
+
+Future: Add encryption-at-rest provider and redaction transform stage.
+
+---
+
+## 8. Deployment Views
+
+### 8.1 Local Research Workstation (Development)
+
+```mermaid
+flowchart TB
+    subgraph Host["Researcher Host (Trusted)"]
+        TM[TaskManager]
+        BM[BrowserManagers]
+        FF[Firefox + Extension]
+    end
+    subgraph LocalNet["Local Network (Untrusted)"]
+        PROXY[Corporate/Research Proxy]
+    end
+    SITES[Internet Sites]
+
+    TM --> BM --> FF --> PROXY --> SITES
+```
+
+**Hardening**: Full-disk encryption, no browser persistence, dedicated non-admin user, egress proxy mandatory.
+
+### 8.2 Container / Kubernetes (Recommended for Production Research)
+
+- One `TaskManager` pod (or Job) per experiment.
+- Browser pods (or sidecars) with:
+  - `securityContext`: non-root, read-only root FS where possible, seccomp profiles.
+  - NetworkPolicy: deny all except proxy + storage endpoints.
+- Storage: PVCs with encryption or object storage with KMS.
+- Init containers for profile seeding and allow-list injection.
+
+See [docs/Deployment.md](docs/Deployment.md) for manifests and hardening.
+
+### 8.3 Air-Gapped / High-Security
+
+Complete isolation: import allow-lists and site seeds via signed USB, export only redacted aggregates. No cloud storage.
+
+---
+
+## 9. Interface & Schema Contracts
+
+- **Public Python API**: `openwpm.config`, `openwpm.task_manager`, `openwpm.commands`.
+- **Extension ↔ Python**: Binary length-prefixed protocol over localhost sockets (defined in `privileged/sockets/` and `openwpm/socket_interface.py`).
+- **Storage Schema**: Versioned. Breaking changes require migration scripts and major version bump.
+- **JS Instrument Settings**: JSON Schema validated (`schemas/js_instrument_settings.schema.json`).
+
+All contracts must be machine-readable and tested.
+
+---
+
+## 10. Modernization & Evolution Roadmap
+
+| Phase | Focus | Key Architectural Changes | Security Impact |
+|-------|-------|---------------------------|-----------------|
+| Current (2026 Q2) | Stabilization | Modern core + docs; legacy TrackerProject quarantined | Improved maintainability; legacy risk isolated |
+| Phase 1 | Containment | Capability tokens, egress proxy enforcement, redaction pipeline, audit logging | Major reduction in blast radius & data exposure |
+| Phase 2 | Modernization | Deprecate TrackerProject; Manifest V3 or BiDi migration; typed HB module | Removal of legacy attack surface |
+| Phase 3 | Platform | Multi-browser support (Chromium via CDP), confidential computing options, formal provenance | Future-proofing + regulatory readiness |
+
+---
+
+## 11. Diagram & Documentation Maintenance
+
+- All Mermaid diagrams in this document are the source of truth.
+- Architecture changes require updates to this file + Security-Hardening.md + relevant sequence diagrams.
+- `docs/schemas/` are auto-generated from JSON Schema via `npm run render_schema_docs`.
+- Review this document on every major release or when trust boundaries change.
+
+**Full file path of this document**: `docs/Architecture.md`
+
+---
+
+*This architecture prioritizes research utility while embedding the security controls required for responsible, auditable web measurement at scale.*

@@ -4,19 +4,19 @@
 **Version**: 0.8.0-hb (research snapshot)  
 **Date**: 2026-04
 
-**WARNING**: The installation process described in `install.sh` deploys Firefox 52 ESR (EOL since 2018) and other vulnerable components. This is **not suitable for any environment with internet exposure** without isolation and modernization. See [Security-and-Privacy.md](docs/Security-and-Privacy.md) before proceeding.
+**WARNING (Historical)**: Older versions of this project deployed Firefox 52 ESR. The primary installation paths have been modernized (Firefox 150+ via `scripts/install-firefox.sh` + conda `environment.yaml`). Legacy scripts still exist for reference but should not be used for new work. See the updated `install.sh` and [docs/Security-Hardening.md](docs/Security-Hardening.md).
 
 ---
 
 ## 1. Supported Environments (Current State)
 
-| Environment | Status | Notes |
-|-------------|--------|-------|
-| Ubuntu 18.04 / 20.04 (bare metal) | Legacy supported | Matches original `install.sh` |
-| Docker (ubuntu:18.04 base) | Supported via Dockerfile | Recommended containment layer |
-| macOS | Partial (install-mac-dev.sh) | Requires manual geckodriver/Firefox management |
-| Modern Python (3.9+) | Not supported | Code has Python 2/3.4–3.6 remnants |
-| Current Firefox (120+) | Not supported | Requires major fork work |
+| Environment          | Status          | Notes |
+|----------------------|-----------------|-------|
+| Ubuntu 22.04+ / 24.04 | Recommended    | Use `environment.yaml` + `scripts/install-firefox.sh` |
+| Docker (ubuntu:24.04) | Recommended    | Modernized Dockerfile (see root Dockerfile) |
+| macOS                | Supported      | `scripts/install-firefox.sh` (cross-platform) |
+| Python 3.12+         | Supported      | Primary path via conda `environment.yaml` |
+| Firefox 150+         | Required       | Matches Extension manifest `strict_min_version` |
 
 **Strong Recommendation**: Perform all work inside Docker or a dedicated VM. Never install the legacy browser stack on a daily driver machine.
 

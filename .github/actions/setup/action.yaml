@@ -1,0 +1,47 @@
+name: 'Setup OpenWPM env'
+description: 'Sets up conda and installs dependencies'
+runs:
+  using: "composite"
+  steps:
+# All of these steps are just setup
+    - name: Setting CONDA_PATH
+      shell: bash
+      run: echo "CONDA_PATH=$HOME/conda" >> $GITHUB_ENV
+    - name: Setting OPENWPM_CONDA_PATH
+      shell: bash
+      run: echo "OPENWPM_CONDA_PATH=$CONDA_PATH/envs/openwpm" >> $GITHUB_ENV
+    # If the environment.yaml hasn't changed we just reuse the entire conda install
+    - id: cache
+      uses: actions/cache@v4
+      env:
+        cache-name: conda-cache
+      with:
+        path: ${{ env.CONDA_PATH }}
+        key: ${{ env.cache-name }}-${{ hashFiles('environment.yaml') }}
+
+    - name: Install conda
+      shell: bash
+      if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+      run: $GITHUB_WORKSPACE/scripts/install-conda.sh
+
+    - shell: bash
+      run: echo "$CONDA_PATH/bin" >> $GITHUB_PATH
+
+    - name: Install modern OpenWPM environment (cache miss)
+      shell: bash
+      if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+      run: |
+        $GITHUB_WORKSPACE/scripts/install-conda.sh || true
+        # Use the modern conda-based environment + dedicated Firefox installer
+        conda env create -f $GITHUB_WORKSPACE/environment.yaml -n openwpm
+        conda activate openwpm
+        $GITHUB_WORKSPACE/scripts/install-firefox.sh
+    - name: Reuse cached environment (cache hit)
+      shell: bash
+      if: ${{ steps.cache.outputs.cache-hit == 'true' }}
+      run: |
+        echo "Using cached conda environment"
+        $GITHUB_WORKSPACE/scripts/install-firefox.sh || echo "Firefox already present or will be provided by cache"
+    - shell: bash
+      run: echo "$OPENWPM_CONDA_PATH/bin" >> $GITHUB_PATH
+    # Now we have a working OpenWPM environment (modern stack: Python 3.12+, recent Firefox + geckodriver)

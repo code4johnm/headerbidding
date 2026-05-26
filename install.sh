@@ -57,34 +57,18 @@ if [ "$TRAVIS" != "true" ]; then
 	pip install --user --upgrade -r requirements.txt
 fi
 
-# Grab the latest version of Firefox ESR.
-# For security reasons it is very important to keep up with patch releases
-# of the ESR, but a major version bump needs to be tested carefully.
-# Older ESRs are not supported by geckodriver.
-firefox_version="$(curl 'https://ftp.mozilla.org/pub/firefox/releases/' |
-grep '/pub/firefox/releases/52.' |
-tail -n 1 | sed -e 's/.*releases\///g' | cut -d '/' -f1)"
+# Install a recent Firefox (required by the current privileged WebExtension).
+# The modern installation script targets Firefox 150+ unbranded builds
+# which are required for the experiment APIs and match the manifest's
+# strict_min_version.
+echo "Installing modern Firefox using scripts/install-firefox.sh..."
+if [ -x "./scripts/install-firefox.sh" ]; then
+    ./scripts/install-firefox.sh
+else
+    echo "ERROR: scripts/install-firefox.sh not found or not executable." >&2
+    echo "The legacy Firefox 52 installation path has been removed." >&2
+    exit 1
+fi
 
-wget https://ftp.mozilla.org/pub/firefox/releases/${firefox_version}/linux-$(uname -m)/en-US/firefox-${firefox_version}.tar.bz2
-tar jxf firefox-${firefox_version}.tar.bz2
-rm -rf firefox-bin
-mv firefox firefox-bin
-rm firefox-${firefox_version}.tar.bz2
-
-# Selenium 3.3+ requires a 'geckodriver' helper executable, which is not yet
-# packaged. `geckodriver` 0.16.0+ is not compatible with Firefox 52. See:
-# https://github.com/mozilla/geckodriver/issues/743
-GECKODRIVER_VERSION=0.15.0
-case $(uname -m) in
-    (x86_64)
-        GECKODRIVER_ARCH=linux64
-        ;;
-    (*)
-        echo Platform $(uname -m) not known to be supported by geckodriver >&2
-        exit 1
-        ;;
-esac
-wget https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-${GECKODRIVER_ARCH}.tar.gz
-tar zxf geckodriver-v${GECKODRIVER_VERSION}-${GECKODRIVER_ARCH}.tar.gz
-rm geckodriver-v${GECKODRIVER_VERSION}-${GECKODRIVER_ARCH}.tar.gz
-mv geckodriver firefox-bin
+# Note: geckodriver is provided by the conda environment (environment.yaml)
+# or can be installed separately. The modern stack uses geckodriver >= 0.35.
