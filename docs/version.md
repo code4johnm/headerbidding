@@ -1,9 +1,9 @@
 # OpenWPM-1776 Versioning
 
-**Document Version:** 1.3  
+**Document Version:** 1.4  
 **Base Upstream Version:** 0.34.0  
 **Fork Name:** headerbidding (OpenWPM-1776)  
-**Last Updated:** 2026-05-27T02:47:30Z
+**Last Updated:** 2026-05-27T20:00:00Z
 
 ---
 
@@ -21,7 +21,7 @@ headerbidding (OpenWPM-1776) is a maintained distribution focused on:
 
 This fork is based on upstream OpenWPM **v0.34.0**.
 
-The current fork version is recorded in the root [VERSION](../VERSION) file (currently `1.3.0`).
+The current fork version is recorded in the root [VERSION](../VERSION) file (currently `1.4.0`).
 
 ## Fork Versioning Scheme
 
@@ -39,6 +39,7 @@ This section provides a structured record of major changes and releases in the h
 
 | Version | Date       | Description of Changes |
 |---------|------------|------------------------|
+| 1.4.0   | 2026-05-27 | **Header Bidding Version Bump to 1.4.0 + Dev Cycle & Commit Message Hygiene**<br><br>• Bumped root `VERSION` from 1.3.0 → 1.4.0 and synchronized **Version**/**Document Version**/**Date**/**Last Updated** headers + version references across the full documentation suite (README.md, SECURITY.md, Build-Process.md, Architecture.md, Security-Hardening.md, Deployment.md, Configuration.md, CONTRIBUTING.md, Troubleshooting.md, AI-Agent-Context.md, and this file).<br>• Rolled back (git commit --amend) the previous commit message from long-form detailed text to the concise new "build, run, test, repeat." style message, aligning with the newly documented Iterative Development Cycle.<br>• Updated `/tmp/msg.txt` with the rolled-back short message and prepared version-bump commit narrative.<br>• Executed "build, run, test, repeat" cycle as primary workflow: baseline + post-edit verification via `python -m pytest -m pyonly` (all green), Extension npm build/lint attempts, and pre-commit hygiene checks.<br>• Added this Version History entry; reinforced that documentation + process improvements (including workflow discipline and version hygiene) are first-class triggers for fork version bumps. |
 | 1.3.0   | 2026-05-26 | **Fork Identity Normalization: OpenWPM-MAGA → OpenWPM-1776**<br><br>• Updated *all* references from the legacy "OpenWPM-MAGA" fork name to the new "OpenWPM-1776" across documentation in both the OpenWPM-1776 and hb-update repositories.<br>• Updated titles, **Fork Name** declarations, "**Workspace:**" headers, body text, SECURITY.md, Security-and-Privacy.md, and `docs/version.md`.<br>• Updated fork versioning suffix examples (`maga.N` → `1776.N`) in both projects.<br>• Added this Version History entry and refreshed the Supported Versions table in SECURITY.md.<br>• Bumped documentation suite (including this file) and root `VERSION` to 1.3.0 for alignment. |
 | 1.2.0   | 2026-04-26 | **Documentation Organization, Versioning & Rendering Polish**<br><br>**Documentation Index & Structure**<br>• Expanded the Documentation Index table in README.md to include nearly all current files in `docs/`, with clear, professional descriptions for each entry.<br>• Added missing documents such as `version.md`, `Architecture-Internals.md`, `Platform-Architecture.md`, `Release-Checklist.md`, `Schema-Documentation.md`, and `Using_OpenWPM.md`.<br>• Grouped schema-related files under a single "JSON Schema Documentation" entry for better readability.<br><br>**version.md Improvements**<br>• Added a clean "Major Accomplishments Summary (2026)" section at the top of the Major Changes area.<br>• Converted the change history into a proper, scannable Version History table.<br>• Significantly expanded and restructured the documentation of all recent work.<br><br>**Versioning**<br>• Bumped document versions to **1.2.0** consistently across the entire suite (README, Architecture, Security-Hardening, Build-Process, Deployment, Configuration, Troubleshooting, AI-Agent-Context, CONTRIBUTING, etc.).<br>• Bumped the root `VERSION` file from `0.8.0` → `1.2.0` to align with documentation versioning.<br><br>**Mermaid & Rendering**<br>• Final round of Mermaid diagram fixes in `docs/Architecture.md` for reliable GitHub rendering (removal of remaining `classDef`, inner `direction TB`, and any leftover `\n` characters).<br><br>**Path Cleanup**<br>• Performed final removal of the last absolute workspace path references from the Documentation Index.<br><br>**README Navigation Improvements**<br>• Added multiple "follow-on" references to the Documentation Set throughout key sections of README.md (Overview, Key Features & Instrumentation, Quick Start, Architecture at a Glance) to improve discoverability of the full documentation.<br>• Updated the top callout to better direct readers to the complete Documentation Set table. |
 | 1.1.0   | 2026-04    | **Documentation Structure, Mermaid Fixes & Path Cleanup**<br><br>• Created the initial curated Documentation Index table in README.md.<br>• Performed the first major round of Mermaid diagram fixes in `docs/Architecture.md`:<br>  - Replaced the non-rendering `C4Context` diagram with standard Mermaid flowcharts.<br>  - Fixed `\n` line breaks in node labels (converted to `<br/>`).<br>  - Removed early `classDef` usage that was causing GitHub parse errors.<br>• Removed the majority of machine-specific absolute paths (`/mnt/5TB/git/hb-update/...`) from all documentation files.<br>• Bumped versions across the documentation suite to 1.1.0 and updated the Supported Versions table in `SECURITY.md`. |

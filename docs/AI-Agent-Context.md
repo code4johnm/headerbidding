@@ -1,8 +1,8 @@
 # AI-Agent-Context.md
 
 **headerbidding: Header Bidding Research Platform**  
-**Version**: 1.3.0  
-**Date**: 2026-05-27T02:47:30Z  
+**Version**: 1.4.0  
+**Date**: 2026-05-27T20:00:00Z  
 **Purpose**: Primary machine-readable and human-readable context file for AI coding agents, LLMs, and autonomous research tools interacting with this repository.  
 **Full Path**: `docs/AI-Agent-Context.md`
 
