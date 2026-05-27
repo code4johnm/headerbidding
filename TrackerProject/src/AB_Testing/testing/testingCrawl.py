@@ -3,17 +3,27 @@
 from __future__ import absolute_import
 import sys
 import os
-sys.path.append('../../')
-from six.moves import range
-from automation import CommandSequence, TaskManager
-import sys
-from scriptUtils import ScriptUtils
+from pathlib import Path
+
+# Add project root to path so we can import openwpm (and local modules)
+script_dir = Path(__file__).resolve().parent
+project_root = script_dir.parents[4]  # HB-update root from .../AB_Testing/testing/training/
+sys.path.insert(0, str(project_root))
+sys.path.append('../../')  # original for local HBLogger etc (relative to cwd when run)
+
+from openwpm.command_sequence import CommandSequence
+from openwpm.task_manager import TaskManager
+from openwpm.config import BrowserParams, ManagerParams
+from openwpm.storage.sql_provider import SQLiteStorageProvider
+
 import time
 import json
 import copy
 import random
 from HBLogger import HBLogger
 import argparse
+# six.moves.range not needed on Py3; use range directly
+
 
 
 
@@ -174,8 +184,6 @@ for iab in iab_files:
     managers.update({iabString:''})
     iab_params.update({iabString:{}})
 
-# Loads the manager preference and NUM_BROWSERS copies of the default browser dictionaries
-# manager_params, browser_params = TaskManager.load_default_params(NUM_BROWSERS)
 with open('./config/testing/allow_manager_params.json') as f: 
     prefs = json.load(f)
     allow_manager_params = copy.deepcopy(prefs)
@@ -221,19 +229,17 @@ for iab in iab_params:
         if iab != "BLOCK":
             iab_params[iab].update({"manager_params":copy.deepcopy(allow_manager_params)})
             iab_params[iab].update({"browser_params":copy.deepcopy(allow_browser_params)})
-            iab_params[iab]['manager_params']['data_directory'] = "./results/owpm/testing/{}/{}/".format(timestamp, iab)
-            iab_params[iab]['manager_params']['log_directory'] = "./results/owpm/testing/{}/{}/".format(timestamp,iab)
-            iab_params[iab]['manager_params']['database_name'] = "crawl-data-testing-{}.sqlite".format(iab)
-            iab_params[iab]['manager_params']['log_file'] = "openwpm-testing-{}.log".format(iab)
-            iab_params[iab]['browser_params'][0]['profile_tar'] = "{}".format(profile_path)
+            data_dir = "./results/owpm/testing/{}/{}/".format(timestamp, iab)
+            iab_params[iab]['manager_params']['data_directory'] = data_dir
+            iab_params[iab]['manager_params']['log_path'] = data_dir + "openwpm-testing-{}.log".format(iab)
+            iab_params[iab]['browser_params'][0]['seed_tar'] = "{}".format(profile_path)
             iab_params[iab]['browser_params'][0]['profile_archive_dir'] = "./profiles/testing/{}/{}/".format(timestamp,iab)
         else: 
             iab_params[iab].update({"manager_params":copy.deepcopy(block_manager_params)})
             iab_params[iab].update({"browser_params":copy.deepcopy(block_browser_params)})
-            iab_params[iab]['manager_params']['data_directory'] = "./results/owpm/testing/{}/{}/".format(timestamp, iab)
-            iab_params[iab]['manager_params']['log_directory'] = "./results/owpm/testing/save/{}/{}/".format(timestamp,iab)
-            iab_params[iab]['manager_params']['database_name'] = "crawl-data-testing-{}.sqlite".format(iab)
-            iab_params[iab]['manager_params']['log_file'] = "openwpm-testing-{}.log".format(iab)
+            data_dir = "./results/owpm/testing/{}/{}/".format(timestamp, iab)
+            iab_params[iab]['manager_params']['data_directory'] = data_dir
+            iab_params[iab]['manager_params']['log_path'] = data_dir + "openwpm-testing-{}.log".format(iab)
             iab_params[iab]['browser_params'][0]['profile_archive_dir'] = "./profiles/testing/{}/{}/".format(timestamp,iab)
     except Exception as e:
         msg = "Exception - Config - {}".format( e)
@@ -241,14 +247,43 @@ for iab in iab_params:
         hblogger.log(msg, level="ERROR")
         raise Exception
  
+def _to_taskmanager(man_d, br_d_list, db_basename):
+    """Convert legacy dict config to new OpenWPM objects + storage provider."""
+    man_d = dict(man_d)  # copy
+    br_list = [dict(b) for b in br_d_list]
+    # legacy key mappings
+    if 'log_directory' in man_d:
+        man_d.setdefault('log_path', man_d.pop('log_directory'))
+    if 'database_name' in man_d:
+        man_d.pop('database_name', None)
+    for b in br_list:
+        if 'profile_tar' in b:
+            b['seed_tar'] = b.pop('profile_tar')
+        if 'headless' in b and 'display_mode' not in b:
+            b['display_mode'] = 'headless' if b.pop('headless') else 'native'
+    m_params = ManagerParams.from_dict(man_d)
+    b_params = [BrowserParams.from_dict(b) for b in br_list]
+    # ensure dirs
+    if not m_params.data_directory or str(m_params.data_directory) == "":
+        m_params.data_directory = Path("./datadir")
+    logp = m_params.log_path
+    if not logp or str(logp) == "":
+        logp = Path(m_params.data_directory) / db_basename.replace('.sqlite','.log')
+        m_params.log_path = logp
+    db_path = Path(m_params.data_directory) / db_basename
+    provider = SQLiteStorageProvider(str(db_path))
+    return m_params, b_params, provider
+
 for iab in managers: 
     try:
         msg = "loading category {} into manager".format( iab)
         
         hblogger.info(msg)
-        manager_params = iab_params[iab]['manager_params']
-        browser_params = iab_params[iab]['browser_params']
-        managers[iab] = TaskManager.TaskManager(manager_params, browser_params)  
+        manager_d = iab_params[iab]['manager_params']
+        browser_ds = iab_params[iab]['browser_params']
+        db_name = "crawl-data-testing-{}.sqlite".format(iab)
+        m_p, b_ps, prov = _to_taskmanager(manager_d, browser_ds, db_name)
+        managers[iab] = TaskManager(m_p, b_ps, prov, None)
     except Exception as e:
         msg = "Exception - manager params - {}".format( e)
         
@@ -286,14 +321,14 @@ for rank in pbjs_sites:
                 # with open('write_out_har.json', 'w') as f: 
                 #     json.dump({'writing':True}, f)
                 #     time.sleep(1)
-                command_sequences[iab] = CommandSequence.CommandSequence(site)
+                command_sequences[iab] = CommandSequence(site)
                 command_sequences[iab].get(sleep=5, timeout=90)
-                command_sequences[iab].run_custom_function(pbjs.getCpm, func_args=(iab,visit,site,intent,))
-                command_sequences[iab].dump_profile_cookies(60)
+                # NOTE: run_custom_function removed in modern OpenWPM; implement via custom BaseCommand
+                # command_sequences[iab].append_command( CustomGetCpmCommand(...) )
+                # For now the bid collection logic in pbjs.getCpm is not auto-executed.
+                # command_sequences[iab].dump_profile_cookies(60)  # removed; use cookie_instrument + profile dump if needed
                 time.sleep(5)
                
-                # command_sequences[iab].run_custom_function(pbjs.write_out_har, func_args=(site, timestamp,iab,intent,'ml_testing',))
-
                 # index='**' synchronizes visits between the three browsers
                 managers[iab].execute_command_sequence(command_sequences[iab])
                 msg = 'managers completed {}'.format( manager_count)

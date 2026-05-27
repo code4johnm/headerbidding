@@ -9,11 +9,13 @@ import copy
 import random
 import argparse
 from multiprocessing import Process
-from publicsuffix import fetch
-from publicsuffix import PublicSuffixList
+from pathlib import Path
 
-psl_file = fetch()
-psl = PublicSuffixList(psl_file)
+# Add project root to path so we can import openwpm
+script_dir = Path(__file__).resolve().parent
+project_root = script_dir.parents[4]  # root from .../AB_Testing/training/
+sys.path.insert(0, str(project_root))
+
 baseSrcPath = os.path.abspath('../../')
 baseHBPath = os.path.abspath('../../../../')
 sys.path.append(baseSrcPath)
@@ -21,9 +23,13 @@ sys.path.append(baseHBPath)
 from HBLogging import HBLogger
 
 
-from six.moves import range
+# six.moves.range not needed on Py3
 from ScriptUtils.scriptUtils import ScriptUtils
-from automation import CommandSequence, TaskManager
+from openwpm.command_sequence import CommandSequence
+from openwpm.task_manager import TaskManager
+from openwpm.config import BrowserParams, ManagerParams
+from openwpm.storage.sql_provider import SQLiteStorageProvider
+
 
 class TrainingCrawl:
     def __init__(self, **kwargs):   
@@ -106,7 +112,7 @@ class TrainingCrawl:
 
                 for category in sitesToVisit[intent]: 
                     start = counter
-                    for i in list(xrange(counter, batch+1)):
+                    for i in list(range(counter, batch+1)):
                         counter+=1
                         print(counter)
                         if (counter %batch) == 0:
@@ -137,8 +143,6 @@ class TrainingCrawl:
 
 
     # print(managers)
-    # Loads the manager preference and NUM_BROWSERS copies of the default browser dictionaries
-    # manager_params, browser_params = TaskManager.load_default_params(NUM_BROWSERS)
 
     def initConfigParams(self,description=""):
         configBase = os.path.join(baseSrcPath, 'config')
@@ -159,9 +163,8 @@ class TrainingCrawl:
                 configParams.update({"manager_params":copy.deepcopy(manager_params)})
                 configParams.update({"browser_params":copy.deepcopy(browser_params)})
                 configParams['manager_params']['data_directory'] = "results/data/{}".format(path)
-                configParams['manager_params']['log_directory'] = "results/logs/{}".format(path)
+                configParams['manager_params']['log_path'] = "results/logs/{}/openwpm-training-{}.log".format(path, description)
                 configParams['manager_params']['database_name'] = "crawl-data-training-{}.sqlite".format(description)
-                configParams['manager_params']['log_file'] = "openwpm-training-{}.log".format(description)
                 configParams['browser_params'][0]['profile_archive_dir'] = "profiles/training/{}".format(path)
 
                 #####Enable for mob proxy
@@ -183,9 +186,29 @@ class TrainingCrawl:
     def getManager(self, configParams):
 
             try:
-                manager_params = configParams['manager_params']
-                browser_params = configParams['browser_params']
-                manager = TaskManager.TaskManager(manager_params, browser_params)  
+                manager_d = configParams['manager_params']
+                browser_ds = configParams['browser_params']
+                # legacy key cleanup + convert
+                man_d = dict(manager_d)
+                br_list = [dict(b) for b in browser_ds]
+                if 'log_directory' in man_d:
+                    man_d['log_path'] = man_d.pop('log_directory')
+                if 'database_name' in man_d:
+                    dbn = man_d.pop('database_name')
+                else:
+                    dbn = 'crawl-data.sqlite'
+                for b in br_list:
+                    if 'profile_tar' in b:
+                        b['seed_tar'] = b.pop('profile_tar')
+                    if 'headless' in b and 'display_mode' not in b:
+                        b['display_mode'] = 'headless' if b.pop('headless') else 'native'
+                m_params = ManagerParams.from_dict(man_d)
+                b_params = [BrowserParams.from_dict(b) for b in br_list]
+                if not m_params.data_directory:
+                    m_params.data_directory = Path("results/data")
+                db_path = Path(m_params.data_directory) / dbn
+                provider = SQLiteStorageProvider(str(db_path))
+                manager = TaskManager(m_params, b_params, provider, None)
                 return manager
             except Exception as e:
                 msg = "Exception - init AB managers - {}".format(e)
@@ -290,18 +313,15 @@ class TrainingCrawl:
     #         json.dump(iabs, f, indent=4, separators=(',',':'), sort_keys=True)
 
 
-    def xrange(self, x):
-        return iter(range(x))  
-
     def crawlSites(self, sitesToVisit, managers):
         visitNumber=0
-        for index in xrange(len(managers)):
+        for index in range(len(managers)):
             manager = managers[index]
             site = sitesToVisit
             print(site)
             visitNumber+=1
             try:          
-                command_sequences =  CommandSequence.CommandSequence(site)
+                command_sequences =  CommandSequence(site)
                             
                 ###Uncomment for HAR logging
                 # command_sequences.run_custom_function(pbjs.start_proxy, func_args=(site, proxy, server))
@@ -313,8 +333,8 @@ class TrainingCrawl:
                 # Start by visiting the page
                 command_sequences.get(sleep=5, timeout=60)
 
-                # dump_profile_cookies/dump_flash_cookies closes the current tab.
-                command_sequences.dump_profile_cookies(60)
+                # dump_profile_cookies removed in current OpenWPM (cookies captured via instrumentation)
+                # command_sequences.dump_profile_cookies(60)
 
                 ###Uncomment for HAR logging
                 # command_sequences.run_custom_function(pbjs.write_out_har, func_args=(site, timestamp,iab,intent,'ml_training',))
