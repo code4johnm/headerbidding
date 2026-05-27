@@ -240,53 +240,53 @@ This project maintains a comprehensive, professional documentation suite designe
 
 | Document | Location | Description |
 |----------|----------|-------------|
-| README.md | `README.md` | Project overview, security warnings, quick start, and high-level guidance. |
-| AGENTS.md | `docs/AGENTS.md` | Operational instructions for AI coding agents (build commands, testing, known issues). |
-| AI-Agent-Context.md | `docs/AI-Agent-Context.md` | Strict rules and context specifically for AI coding agents working on this codebase. |
-| version.md | `docs/version.md` | Versioning policy and fork change history. |
+| [README.md](README.md) | `README.md` | Project overview, security warnings, quick start, and high-level guidance. |
+| [AGENTS.md](docs/AGENTS.md) | `docs/AGENTS.md` | Operational instructions for AI coding agents (build commands, testing, known issues). |
+| [AI-Agent-Context.md](docs/AI-Agent-Context.md) | `docs/AI-Agent-Context.md` | Strict rules and context specifically for AI coding agents working on this codebase. |
+| [version.md](docs/version.md) | `docs/version.md` | Versioning policy and fork change history. |
 
 ### Architecture & Design
 
 | Document | Location | Description |
 |----------|----------|-------------|
-| Architecture.md | `docs/Architecture.md` | Primary architecture reference with Mermaid diagrams, trust boundaries, and data flows. |
-| Architecture-Internals.md | `docs/Architecture-Internals.md` | Supplementary internal architecture details and diagrams. |
-| Platform-Architecture.md | `docs/Platform-Architecture.md` | *Legacy* – Older platform architecture documentation. |
+| [Architecture.md](docs/Architecture.md) | `docs/Architecture.md` | Primary architecture reference with Mermaid diagrams, trust boundaries, and data flows. |
+| [Architecture-Internals.md](docs/Architecture-Internals.md) | `docs/Architecture-Internals.md` | Supplementary internal architecture details and diagrams. |
+| [Platform-Architecture.md](docs/Platform-Architecture.md) | `docs/Platform-Architecture.md` | *Legacy* – Older platform architecture documentation. |
 
 ### Security & Governance
 
 | Document | Location | Description |
 |----------|----------|-------------|
-| Security-Hardening.md | `docs/Security-Hardening.md` | Comprehensive security guide (OWASP, NIST, Zero Trust, AI agent risks, hardening checklist). |
-| SECURITY.md | `docs/SECURITY.md` | Vulnerability disclosure policy and supported versions. |
-| CONTRIBUTING.md | `docs/CONTRIBUTING.md` | Contribution guidelines with security and modernization requirements. |
-| CODE_OF_CONDUCT.md | `docs/CODE_OF_CONDUCT.md` | Project code of conduct. |
-| Security-and-Privacy.md | `docs/Security-and-Privacy.md` | *Legacy* – Earlier threat model and privacy analysis. |
+| [Security-Hardening.md](docs/Security-Hardening.md) | `docs/Security-Hardening.md` | Comprehensive security guide (OWASP, NIST, Zero Trust, AI agent risks, hardening checklist). |
+| [SECURITY.md](docs/SECURITY.md) | `docs/SECURITY.md` | Vulnerability disclosure policy and supported versions. |
+| [CONTRIBUTING.md](docs/CONTRIBUTING.md) | `docs/CONTRIBUTING.md` | Contribution guidelines with security and modernization requirements. |
+| [CODE_OF_CONDUCT.md](docs/CODE_OF_CONDUCT.md) | `docs/CODE_OF_CONDUCT.md` | Project code of conduct. |
+| [Security-and-Privacy.md](docs/Security-and-Privacy.md) | `docs/Security-and-Privacy.md` | *Legacy* – Earlier threat model and privacy analysis. |
 
 ### Guides & Operations
 
 | Document | Location | Description |
 |----------|----------|-------------|
-| Installation-Guide.md | `docs/Installation-Guide.md` | Installation instructions and supported environments. |
-| Build-Process.md | `docs/Build-Process.md` | Build process, supply chain security, and dependency management. |
-| Deployment.md | `docs/Deployment.md` | Deployment patterns (local, container, Kubernetes, air-gapped). |
-| Configuration.md | `docs/Configuration.md` | Complete reference for ManagerParams and BrowserParams. |
-| Troubleshooting.md | `docs/Troubleshooting.md` | Common issues and debugging guidance. |
-| Development.md | `docs/Development.md` | Developer workflow and contribution process. |
-| Release-Checklist.md | `docs/Release-Checklist.md` | Release preparation checklist. |
+| [Installation-Guide.md](docs/Installation-Guide.md) | `docs/Installation-Guide.md` | Installation instructions and supported environments. |
+| [Build-Process.md](docs/Build-Process.md) | `docs/Build-Process.md` | Build process, supply chain security, and dependency management. |
+| [Deployment.md](docs/Deployment.md) | `docs/Deployment.md` | Deployment patterns (local, container, Kubernetes, air-gapped). |
+| [Configuration.md](docs/Configuration.md) | `docs/Configuration.md` | Complete reference for ManagerParams and BrowserParams. |
+| [Troubleshooting.md](docs/Troubleshooting.md) | `docs/Troubleshooting.md` | Common issues and debugging guidance. |
+| [Development.md](docs/Development.md) | `docs/Development.md` | Developer workflow and contribution process. |
+| [Release-Checklist.md](docs/Release-Checklist.md) | `docs/Release-Checklist.md` | Release preparation checklist. |
 
 ### Usage & Research
 
 | Document | Location | Description |
 |----------|----------|-------------|
-| Usage-Guide.md | `docs/Usage-Guide.md` | Detailed usage patterns and header bidding research workflows. |
-| Using_OpenWPM.md | `docs/Using_OpenWPM.md` | *Legacy* – Guide to core OpenWPM functionality. |
-| Schema-Documentation.md | `docs/Schema-Documentation.md` | Overview of platform data schemas. |
+| [Usage-Guide.md](docs/Usage-Guide.md) | `docs/Usage-Guide.md` | Detailed usage patterns and header bidding research workflows. |
+| [Using_OpenWPM.md](docs/Using_OpenWPM.md) | `docs/Using_OpenWPM.md` | *Legacy* – Guide to core OpenWPM functionality. |
+| [Schema-Documentation.md](docs/Schema-Documentation.md) | `docs/Schema-Documentation.md` | Overview of platform data schemas. |
 
 ### Technical Reference
 
 | Document | Location | Description |
 |----------|----------|-------------|
-| JSON Schema Documentation | `docs/schemas/` | Auto-generated documentation for JavaScript instrumentation settings. |
+| [JSON Schema Documentation](docs/schemas/README.md) | `docs/schemas/` | Auto-generated documentation for JavaScript instrumentation settings. |
 
 Additional legacy and auto-generated content exists under `docs/`. The documents above represent the actively maintained core of the documentation set.
