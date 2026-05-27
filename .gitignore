@@ -21,6 +21,7 @@ C:\\nppdf32Log\\debuglog.txt
 */idea
 venv/
 
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
