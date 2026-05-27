@@ -7,7 +7,7 @@
 
 
 > **Version**: 1.2.0-hb (research snapshot)  
-> **Last Updated**: 2026-04-26  
+> **Last Updated**: 2026-05-26  
 > **License**: Mozilla Public License 2.0 (MPL-2.0)  
 > **Primary Standards Alignment**: OWASP Top 10 (2021), OWASP ASVS 4.0, NIST Cybersecurity Framework, ISO 27001 principles, Secure SDLC (SSDL), Zero Trust research workload practices.
 
