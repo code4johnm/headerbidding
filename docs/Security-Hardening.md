@@ -1,8 +1,8 @@
 # Security Hardening Guide
 
 **headerbidding: Header Bidding Research Platform**  
-**Document Version**: 1.2.0  
-**Date**: 2026-04-26  
+**Document Version**: 1.3.0  
+**Date**: 2026-05-27T02:47:30Z  
 **Classification**: Public (controlled disclosure for sensitive implementation details)  
 **Standards**: OWASP Top 10 (2021), OWASP ASVS 4.0 (target Level 2), OWASP Top 10 for LLM Applications (where AI orchestration is used), NIST Cybersecurity Framework v1.1, ISO 27001:2022 control mapping, Secure Software Development Lifecycle (SSDL), Zero Trust Architecture principles (NIST SP 800-207 adapted for research workloads).
 

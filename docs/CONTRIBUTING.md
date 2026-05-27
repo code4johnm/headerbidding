@@ -1,8 +1,8 @@
 # Contributing Guidelines
 
 **headerbidding: Header Bidding Research Platform**  
-**Version**: 1.2.0  
-**Date**: 2026-04-26  
+**Version**: 1.3.0  
+**Date**: 2026-05-27T02:47:30Z  
 **Full Path**: `docs/CONTRIBUTING.md`
 
 ---
