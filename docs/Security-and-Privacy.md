@@ -1,8 +1,12 @@
+---
+Last Updated: 2026-05-27 15:51 (UTC)
+---
+
 # Security and Privacy
 
 **HeaderBidding Research Platform – Security, Privacy & Compliance Guidance**  
 **Version**: 0.8.0-hb (research snapshot)  
-**Date**: 2026-05-27T15:30:00Z
+**Date**: 2026-05-27T15:30:00Z  
 **Classification**: Public (with controlled disclosure for security issues)
 
 **Standards Alignment**: OWASP Top 10 (2021), OWASP ASVS 4.0, NIST Cybersecurity Framework (Identify/Protect/Detect/Respond/Recover), Secure Software Development Lifecycle (SSDL), IAB Tech Lab guidelines for measurement, GDPR/CCPA/ePrivacy research considerations.

@@ -1,13 +1,14 @@
 
 
-from __future__ import absolute_import
-import sys
-import os
-import time
-import json
-import copy
-import random
+from __future__ import annotations
+
 import argparse
+import copy
+import json
+import os
+import random
+import sys
+import time
 from multiprocessing import Process
 from pathlib import Path
 

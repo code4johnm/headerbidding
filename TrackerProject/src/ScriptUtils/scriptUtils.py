@@ -1,8 +1,10 @@
-import os
-import time
+from __future__ import annotations
+
 import json
-import random
 import logging
+import os
+import random
+import time
 # from browsermobproxy import Server
 
 

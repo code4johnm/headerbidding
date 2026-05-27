@@ -1,10 +1,13 @@
-import os
-import sys 
+from __future__ import annotations
+
 import json
+import os
+import sys
 import time
+from pprint import pprint
+
 import arff
 from HBLogger import HBLogger
-from pprint import pprint
 
 """
 seed profile trackers detected: 

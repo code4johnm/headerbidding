@@ -1,5 +1,7 @@
-import os
+from __future__ import annotations
+
 import json
+import os
 from argparse import ArgumentParser
 class GetSitesToVisit:
     def __init__(self, **kwargs):    

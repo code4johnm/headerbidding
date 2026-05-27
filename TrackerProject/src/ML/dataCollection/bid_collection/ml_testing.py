@@ -1,10 +1,13 @@
-import os
-import time
+from __future__ import annotations
+
 import json
+import os
 import random
-from HBLogger import HBLogger
 import tempfile
+import time
 from threading import Thread
+
+from HBLogger import HBLogger
 class MLTesting:
     def __init__(self):
         self.training_profiles = {}

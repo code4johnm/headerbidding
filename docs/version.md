@@ -1,3 +1,7 @@
+---
+Last Updated: 2026-05-27 15:51 (UTC)
+---
+
 # OpenWPM-1776 Versioning
 
 **Document Version:** 1.5  

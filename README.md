@@ -1,3 +1,7 @@
+---
+Last Updated: 2026-05-27 15:51 (UTC)
+---
+
 # headerbidding: Header Bidding Research Platform
 
 **Modernized OpenWPM-based framework for large-scale, ethical measurement of Header Bidding (HB), Real-Time Bidding (RTB), and Prebid.js auction dynamics.**

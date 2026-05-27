@@ -1,10 +1,13 @@
+from __future__ import annotations
+
+import json
 import os
+import random
 import sys
 import time
-import json
-import random
-from HBLogger import HBLogger
 from subprocess import call
+
+from HBLogger import HBLogger
 
 
 top_20_trackers = { "alphabet": 1499729,

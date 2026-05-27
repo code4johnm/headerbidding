@@ -1,3 +1,7 @@
+---
+Last Updated: 2026-05-27 15:51 (UTC)
+---
+
 # Configuration Reference
 
 **headerbidding: Header Bidding Research Platform**  

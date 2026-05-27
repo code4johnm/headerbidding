@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import os
+
 from getSitesToVisit import GetSitesToVisit as GS
 class Lancher:
     def __init__(self):

@@ -1,8 +1,12 @@
 
 
-from __future__ import absolute_import
-import sys
+from __future__ import annotations
+
+import copy
+import json
 import os
+import sys
+import time
 from pathlib import Path
 
 # Add project root to path so we can import openwpm (and local modules)
@@ -15,10 +19,6 @@ from openwpm.command_sequence import CommandSequence
 from openwpm.task_manager import TaskManager
 from openwpm.config import BrowserParams, ManagerParams
 from openwpm.storage.sql_provider import SQLiteStorageProvider
-
-import time
-import json
-import copy
 import random
 from HBLogger import HBLogger
 import argparse
