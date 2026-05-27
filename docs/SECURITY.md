@@ -1,9 +1,9 @@
 # Security Policy
 
 **headerbidding: Header Bidding Research Platform (Modernized OpenWPM)**  
-**Version**: 1.2.0  
-**Date**: 2026-04-26  
-**Last Reviewed**: 2026-04-26  
+**Version**: 1.3.0  
+**Date**: 2026-05-27T02:47:30Z  
+**Last Reviewed**: 2026-05-27T02:47:30Z  
 **Classification**: Public with controlled disclosure
 
 **Standards Alignment**: This policy follows ISO 27001, NIST SP 800-53, and industry best practices for vulnerability disclosure in research tooling.
@@ -14,7 +14,8 @@
 
 | Version                  | Support Level                          | Notes |
 |--------------------------|----------------------------------------|-------|
-| 1.2.0 (current)          | Full security review + modernization   | Mermaid diagram fixes, documentation index/TOC, centralization of top-level docs into `docs/` |
+| 1.3.0 (current)          | Fork identity + documentation maintenance | OpenWPM-MAGA → OpenWPM-1776 reference cleanup across OpenWPM-1776 and hb-update documentation; Version History table and SECURITY supported versions refresh |
+| 1.2.0                    | Full security review + modernization   | Mermaid diagram fixes, documentation index/TOC, centralization of top-level docs into `docs/` |
 | 1.1.0                    | Security fixes + documentation         | Toolchain modernization, install script cleanup, Flash removal |
 | 0.8.0 (headerbidding)    | Security fixes only                    | Legacy research snapshot |
 | Older / pre-modernization| Critical issues only                   | Strongly recommend migration |
