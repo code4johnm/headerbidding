@@ -2,7 +2,7 @@
 
 **Modernized OpenWPM-based framework for large-scale, ethical measurement of Header Bidding (HB), Real-Time Bidding (RTB), and Prebid.js auction dynamics.**
 
-> **Documentation Set**: See the full curated documentation table below.
+> **Documentation Set**: See the full [Documentation Set](#documentation-set) table below, including the complete index of all project documentation.
 
 
 
@@ -36,7 +36,7 @@ Before any execution:
 
 **Known Critical Limitations**
 
-- Legacy `TrackerProject/` layer contains absolute researcher-specific filesystem paths (e.g., `/home/johncook/...`) and JSON-file mutex coordination with well-documented race conditions and data-loss risks.
+- Legacy `TrackerProject/` layer contains absolute researcher-specific filesystem paths (e.g., `~/...`) and JSON-file mutex coordination with well-documented race conditions and data-loss risks.
 - Dockerfiles and some install scripts reference outdated directory layouts (`automation/`) and ancient browser stacks in certain configurations.
 - The privileged instrumentation extension (manifest v2, `unsafe-eval` CSP) runs with chrome-level privileges; a compromised extension or malicious site exploiting instrumentation hooks presents a realistic host-escalation vector.
 - No built-in authentication, authorization, or encryption-at-rest for telemetry. The platform assumes a fully trusted local execution context.
@@ -62,6 +62,8 @@ See [docs/Security-Hardening.md](docs/Security-Hardening.md) and [docs/SECURITY.
 
 The platform enables reproducible studies on bidder landscape concentration, privacy extension impact on eCPM/win rates, and the privacy risks of RTB telemetry leakage.
 
+For the full Documentation Set (including detailed guides and the Documentation Index), see below.
+
 ---
 
 ## Key Features & Instrumentation
@@ -79,6 +81,8 @@ The platform enables reproducible studies on bidder landscape concentration, pri
 | ML / Profiling (Legacy)      | Bid feature extraction → synthetic user interest profiles → training pipelines | High re-identification risk; GDPR special-category inference possible |
 
 Full instrumentation settings: [docs/Configuration.md](docs/Configuration.md) and `schemas/js_instrument_settings.schema.json`.
+
+For the complete Documentation Set, see below.
 
 ---
 
@@ -170,6 +174,8 @@ See `demo.py` (legacy style), `crawler.py`, `custom_command.py`, and [docs/Usage
 cd Extension && npm run build
 ```
 
+For the complete set of documentation (including detailed configuration, security, deployment, and troubleshooting guides), see the [Documentation Set](#documentation-set) section below.
+
 ---
 
 ## Architecture at a Glance
@@ -183,6 +189,8 @@ The system follows a multi-process Zero Trust-inspired research workload model:
 - **Legacy HB Layer**: `TrainingCrawl` / A/B state machines + ML pipelines operating on bid exports.
 
 Detailed component responsibilities, data flows, security boundaries, and Mermaid diagrams: [docs/Architecture.md](docs/Architecture.md).
+
+For the full Documentation Set, see below.
 
 ---
 
@@ -226,30 +234,59 @@ This platform is derived from OpenWPM, originally developed by the Princeton Uni
 For questions on responsible use or the modernization program, open an issue with the `security` or `modernization` label.
 ## Documentation Set
 
+This project maintains a comprehensive, professional documentation suite designed for security-conscious research use. The documents below represent the actively maintained core.
+
+### Core Documentation
+
 | Document | Location | Description |
 |----------|----------|-------------|
-| README.md | `README.md` | Main project overview, security warnings, quick start, and high-level features. |
-| AGENTS.md | `docs/AGENTS.md` | Guidance for AI coding agents (build commands, architecture notes, known issues). |
-| AI-Agent-Context.md | `docs/AI-Agent-Context.md` | Strict rules and context file specifically for AI coding agents and LLMs working on the codebase. |
-| Architecture.md | `docs/Architecture.md` | Detailed system architecture with Mermaid diagrams, trust boundaries, data flows, and component responsibilities. |
-| Architecture-Internals.md | `docs/Architecture-Internals.md` | Additional internal architecture details and supplementary diagrams. |
-| Build-Process.md | `docs/Build-Process.md` | Reproducible builds, supply chain security, extension compilation, and dependency management. |
-| Configuration.md | `docs/Configuration.md` | Authoritative reference for `ManagerParams` and `BrowserParams`. |
-| CONTRIBUTING.md | `docs/CONTRIBUTING.md` | Contribution guidelines with emphasis on security reviews and modernization. |
-| Deployment.md | `docs/Deployment.md` | Deployment patterns (local, Docker, Kubernetes, air-gapped) following Zero Trust principles. |
-| Development.md | `docs/Development.md` | Developer guide and contribution workflow. |
-| Installation-Guide.md | `docs/Installation-Guide.md` | Installation instructions and environment support matrix. |
-| Platform-Architecture.md | `docs/Platform-Architecture.md` | Legacy platform architecture documentation. |
-| Release-Checklist.md | `docs/Release-Checklist.md` | Step-by-step checklist for preparing new releases. |
-| Schema-Documentation.md | `docs/Schema-Documentation.md` | Overview of data schemas used by the platform. |
-| Security-Hardening.md | `docs/Security-Hardening.md` | Comprehensive security guide (OWASP, NIST, Zero Trust, AI agent integration, hardening checklist). |
-| Security-and-Privacy.md | `docs/Security-and-Privacy.md` | Legacy threat model and privacy considerations (complementary to Security-Hardening.md). |
+| README.md | `README.md` | Project overview, security warnings, quick start, and high-level guidance. |
+| AGENTS.md | `docs/AGENTS.md` | Operational instructions for AI coding agents (build commands, testing, known issues). |
+| AI-Agent-Context.md | `docs/AI-Agent-Context.md` | Strict rules and context specifically for AI coding agents working on this codebase. |
+| version.md | `docs/version.md` | Versioning policy and fork change history. |
+
+### Architecture & Design
+
+| Document | Location | Description |
+|----------|----------|-------------|
+| Architecture.md | `docs/Architecture.md` | Primary architecture reference with Mermaid diagrams, trust boundaries, and data flows. |
+| Architecture-Internals.md | `docs/Architecture-Internals.md` | Supplementary internal architecture details and diagrams. |
+| Platform-Architecture.md | `docs/Platform-Architecture.md` | *Legacy* – Older platform architecture documentation. |
+
+### Security & Governance
+
+| Document | Location | Description |
+|----------|----------|-------------|
+| Security-Hardening.md | `docs/Security-Hardening.md` | Comprehensive security guide (OWASP, NIST, Zero Trust, AI agent risks, hardening checklist). |
 | SECURITY.md | `docs/SECURITY.md` | Vulnerability disclosure policy and supported versions. |
-| Troubleshooting.md | `docs/Troubleshooting.md` | Common issues, debugging steps, and recovery procedures. |
-| Usage-Guide.md | `docs/Usage-Guide.md` | Detailed usage patterns for experiments and header bidding research. |
-| Using_OpenWPM.md | `docs/Using_OpenWPM.md` | Guide for using the core OpenWPM functionality. |
-| version.md | `docs/version.md` | Versioning policy and fork versioning information for the project. |
-| CHANGELOG.md | `docs/CHANGELOG.md` | Project changelog. |
-| CODE_OF_CONDUCT.md | `docs/CODE_OF_CONDUCT.md` | Contributor Covenant code of conduct. |
-| CLAUDE.md | `docs/CLAUDE.md` | Symlink to AGENTS.md for Claude and other AI tools. |
-| JSON Schema Documentation | `docs/schemas/` | Auto-generated detailed documentation for the JavaScript instrumentation settings schema (including individual setting object docs). |
+| CONTRIBUTING.md | `docs/CONTRIBUTING.md` | Contribution guidelines with security and modernization requirements. |
+| CODE_OF_CONDUCT.md | `docs/CODE_OF_CONDUCT.md` | Project code of conduct. |
+| Security-and-Privacy.md | `docs/Security-and-Privacy.md` | *Legacy* – Earlier threat model and privacy analysis. |
+
+### Guides & Operations
+
+| Document | Location | Description |
+|----------|----------|-------------|
+| Installation-Guide.md | `docs/Installation-Guide.md` | Installation instructions and supported environments. |
+| Build-Process.md | `docs/Build-Process.md` | Build process, supply chain security, and dependency management. |
+| Deployment.md | `docs/Deployment.md` | Deployment patterns (local, container, Kubernetes, air-gapped). |
+| Configuration.md | `docs/Configuration.md` | Complete reference for ManagerParams and BrowserParams. |
+| Troubleshooting.md | `docs/Troubleshooting.md` | Common issues and debugging guidance. |
+| Development.md | `docs/Development.md` | Developer workflow and contribution process. |
+| Release-Checklist.md | `docs/Release-Checklist.md` | Release preparation checklist. |
+
+### Usage & Research
+
+| Document | Location | Description |
+|----------|----------|-------------|
+| Usage-Guide.md | `docs/Usage-Guide.md` | Detailed usage patterns and header bidding research workflows. |
+| Using_OpenWPM.md | `docs/Using_OpenWPM.md` | *Legacy* – Guide to core OpenWPM functionality. |
+| Schema-Documentation.md | `docs/Schema-Documentation.md` | Overview of platform data schemas. |
+
+### Technical Reference
+
+| Document | Location | Description |
+|----------|----------|-------------|
+| JSON Schema Documentation | `docs/schemas/` | Auto-generated documentation for JavaScript instrumentation settings. |
+
+Additional legacy and auto-generated content exists under `docs/`. The documents above represent the actively maintained core of the documentation set.

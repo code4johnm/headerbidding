@@ -75,7 +75,7 @@ browser_params[0].js_instrument_settings = ["collection_fingerprinting"]
 
 ### 2.4 Legacy TrackerProject / HB Layer Issues
 
-**Hardcoded Paths** (`/home/johncook/...` etc.):
+**Hardcoded Paths** (`~/...` etc.):
 - Search and replace all absolute paths with configurable values or `Path(__file__).parent` patterns.
 - The files are listed in the earlier analysis scan.
 

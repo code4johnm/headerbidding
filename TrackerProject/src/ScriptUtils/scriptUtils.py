@@ -128,11 +128,11 @@ class ScriptUtils:
         site = site.split('://')[1]
         # if iab != 'prebid_crawl':
         if crawl_type == "NO_INTENT":
-            file = os.path.join('/home/johncook/headerBidding/TrackingProject/results/bids_no_intent/', site+"_{}.json".format(iab))
+            file = os.path.join('./results/bids_no_intent/', site+"_{}.json".format(iab))
         else:
-            file = os.path.join('/home/johncook/headerBidding/TrackingProject/results/bids_intent/', site+"_{}.json".format(iab))
+            file = os.path.join('./results/bids_intent/', site+"_{}.json".format(iab))
         # else: 
-        #     file =  os.path.join('/home/johncook/headerBidding/TrackingProject/results/pbjs_crawl_bids/', site+".json")
+        #     file =  os.path.join('./results/pbjs_crawl_bids/', site+".json")
         try: 
             with open(file) as f:                  
                 data = json.load(f) 
@@ -192,11 +192,11 @@ class ScriptUtils:
         data = []
         domain = driver.current_url
         
-        with open('/home/johncook/headerBidding/TrackingProject/results/pbjs_sites_full.json') as f:      
+        with open('./results/pbjs_sites_full.json') as f:      
             data = json.load(f)  
             data.update({domain: version})
                     
-        with open('/home/johncook/headerBidding/TrackingProject/results/pbjs_sites_full.json', 'w') as f: 
+        with open('./results/pbjs_sites_full.json', 'w') as f: 
             json.dump(data, f, indent=True, separators=(',', ':'))
        
         try:

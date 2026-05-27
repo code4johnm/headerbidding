@@ -307,8 +307,8 @@ class ml_analysis:
  
 
 
-        sys.path.append('/home/johncook/headerBidding/TrackingProject/src/measure_tools')
-        sys.path.append('/home/johncook/headerBidding/TrackingProject/src/measure_tools/crawl_utils')
+        sys.path.append('./src/measure_tools')
+        sys.path.append('./src/measure_tools/crawl_utils')
         os.system('python measure_tools/get_tp_and_owners.py --sqlite_file {} --output {}'.format(sqlite_path, self.output_path))
         tp_files = os.listdir(self.output_path)
         tp_path = ""

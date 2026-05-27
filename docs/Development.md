@@ -37,7 +37,7 @@ Avoid putting new logic in the root except for demos and orchestration entrypoin
    pip install -r requirements-dev.txt
    pre-commit install   # if you add a config
    ```
-3. **Critical First Task**: Create `config/local.env` (gitignored) and a path abstraction module that replaces all hardcoded `/home/johncook/headerBidding` strings.
+3. **Critical First Task**: Create `config/local.env` (gitignored) and a path abstraction module that replaces all hardcoded `~/headerBidding` strings.
 
 ---
 

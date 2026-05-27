@@ -176,18 +176,18 @@ for iab in iab_files:
 
 # Loads the manager preference and NUM_BROWSERS copies of the default browser dictionaries
 # manager_params, browser_params = TaskManager.load_default_params(NUM_BROWSERS)
-with open('/home/johncook/headerBidding/TrackingProject/config/testing/allow_manager_params.json') as f: 
+with open('./config/testing/allow_manager_params.json') as f: 
     prefs = json.load(f)
     allow_manager_params = copy.deepcopy(prefs)
-with open('/home/johncook/headerBidding/TrackingProject/config/testing/allow_browser_params.json') as f: 
+with open('./config/testing/allow_browser_params.json') as f: 
     prefs = json.load(f)
     allow_browser_params = [copy.deepcopy(prefs) for i in range(
         0, NUM_BROWSERS)]
 
-with open('/home/johncook/headerBidding/TrackingProject/config/testing/block_manager_params.json') as f: 
+with open('./config/testing/block_manager_params.json') as f: 
     prefs = json.load(f)
     block_manager_params = copy.deepcopy(prefs)
-with open('/home/johncook/headerBidding/TrackingProject/config/testing/block_browser_params.json') as f: 
+with open('./config/testing/block_browser_params.json') as f: 
     prefs = json.load(f)
     block_browser_params = [copy.deepcopy(prefs) for i in range(
         0, NUM_BROWSERS)]
@@ -213,28 +213,28 @@ skip = -1
 #             
 #             hblogger.info(msg)
 # Visits the sites with all browsers simultaneously
-load_path = '/home/johncook/headerBidding/TrackingProject/profiles/testing/load'
-profile_folder = os.listdir('/home/johncook/headerBidding/TrackingProject/profiles/testing/load/')[0]
+load_path = './profiles/testing/load'
+profile_folder = os.listdir('./profiles/testing/load/')[0]
 profile_path = os.path.join(load_path, profile_folder)
 for iab in iab_params: 
     try:
         if iab != "BLOCK":
             iab_params[iab].update({"manager_params":copy.deepcopy(allow_manager_params)})
             iab_params[iab].update({"browser_params":copy.deepcopy(allow_browser_params)})
-            iab_params[iab]['manager_params']['data_directory'] = "/home/johncook/headerBidding/TrackingProject/results/owpm/testing/{}/{}/".format(timestamp, iab)
-            iab_params[iab]['manager_params']['log_directory'] = "/home/johncook/headerBidding/TrackingProject/results/owpm/testing/{}/{}/".format(timestamp,iab)
+            iab_params[iab]['manager_params']['data_directory'] = "./results/owpm/testing/{}/{}/".format(timestamp, iab)
+            iab_params[iab]['manager_params']['log_directory'] = "./results/owpm/testing/{}/{}/".format(timestamp,iab)
             iab_params[iab]['manager_params']['database_name'] = "crawl-data-testing-{}.sqlite".format(iab)
             iab_params[iab]['manager_params']['log_file'] = "openwpm-testing-{}.log".format(iab)
             iab_params[iab]['browser_params'][0]['profile_tar'] = "{}".format(profile_path)
-            iab_params[iab]['browser_params'][0]['profile_archive_dir'] = "/home/johncook/headerBidding/TrackingProject/profiles/testing/{}/{}/".format(timestamp,iab)
+            iab_params[iab]['browser_params'][0]['profile_archive_dir'] = "./profiles/testing/{}/{}/".format(timestamp,iab)
         else: 
             iab_params[iab].update({"manager_params":copy.deepcopy(block_manager_params)})
             iab_params[iab].update({"browser_params":copy.deepcopy(block_browser_params)})
-            iab_params[iab]['manager_params']['data_directory'] = "/home/johncook/headerBidding/TrackingProject/results/owpm/testing/{}/{}/".format(timestamp, iab)
-            iab_params[iab]['manager_params']['log_directory'] = "/home/johncook/headerBidding/TrackingProject/results/owpm/testing/save/{}/{}/".format(timestamp,iab)
+            iab_params[iab]['manager_params']['data_directory'] = "./results/owpm/testing/{}/{}/".format(timestamp, iab)
+            iab_params[iab]['manager_params']['log_directory'] = "./results/owpm/testing/save/{}/{}/".format(timestamp,iab)
             iab_params[iab]['manager_params']['database_name'] = "crawl-data-testing-{}.sqlite".format(iab)
             iab_params[iab]['manager_params']['log_file'] = "openwpm-testing-{}.log".format(iab)
-            iab_params[iab]['browser_params'][0]['profile_archive_dir'] = "/home/johncook/headerBidding/TrackingProject/profiles/testing/{}/{}/".format(timestamp,iab)
+            iab_params[iab]['browser_params'][0]['profile_archive_dir'] = "./profiles/testing/{}/{}/".format(timestamp,iab)
     except Exception as e:
         msg = "Exception - Config - {}".format( e)
         

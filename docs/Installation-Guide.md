@@ -98,7 +98,7 @@ The project has not been actively maintained on macOS for header bidding workloa
 After any install:
 
 1. **Replace Hardcoded Paths** (TrackerProject layer)
-   - Search entire codebase for `/home/johncook/headerBidding` and `/mnt/hgfs`.
+   - Search entire codebase for `~/headerBidding` and `/mnt/hgfs`.
    - Introduce `HB_ROOT`, `RESULTS_DIR` environment variables or a `config/local.json`.
 
 2. **Review & Lock Down `browser_params.json`** (see [Configuration.md](docs/Configuration.md))
@@ -117,7 +117,7 @@ After any install:
 
 5. **Verify No Secrets in Git**
    ```bash
-   git ls-files | xargs grep -l "password\|api_key\|AKIA\|/home/johncook"
+   git ls-files | xargs grep -l "password\|api_key\|AKIA\|/home/<researcher>"
    ```
 
 ---

@@ -155,7 +155,7 @@ Current state does **not** follow a modern SSDL:
 
 ### Phase 0 – Immediate Containment (Do Before Any New Crawl)
 - [ ] Run exclusively inside Docker/Podman with `--security-opt no-new-privileges` + seccomp + AppArmor.
-- [ ] Replace all hardcoded `/home/johncook/...` and `/mnt/hgfs/...` paths with environment variables + config files.
+- [ ] Replace all hardcoded `~/...` and `/mnt/hgfs/...` paths with environment variables + config files.
 - [ ] Add site allow-list validation in `TrainingCrawl` and `getSitesToVisit`.
 - [ ] Disable or heavily restrict `save_all_content`, `post_body` capture unless explicitly justified per experiment.
 - [ ] Implement basic PII redaction (email, phone, national ID regexes) on all exported records before writing to disk/S3.

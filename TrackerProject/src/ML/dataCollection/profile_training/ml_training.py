@@ -233,16 +233,16 @@ while trainingRounds < 100000:
                     rules = f.readlines()
             if filter_name != "": 
                 ublock_origin_rules = []
-                with open('/home/johncook/headerBidding/automation/DeployBrowsers/firefox_extensions/ublock_origin/storage.js') as f: 
+                with open('./firefox_extensions/ublock_origin/storage.js') as f: 
                     ublock_origin_rules = json.load(f)
                     content_url = ublock_origin_rules['availableFilterLists'][filter_name]['contentURL']
                     ublock_origin_rules['selectedFilterLists'] = ['ublock-filters']
                     ublock_origin_rules['availableFilterLists']['ublock-filters']['contentURL'] = content_url
                 
-                with open('/home/johncook/headerBidding/automation/DeployBrowsers/firefox_extensions/ublock_origin/storage.js','w') as f: 
+                with open('./firefox_extensions/ublock_origin/storage.js','w') as f: 
                     json.dump(ublock_origin_rules, f, separators=(',',':'), indent=4)
                 
-                with open('/home/johncook/headerBidding/TrackingProject/src/ublock_origin-1.14.10/assets/ublock/filters.txt','w') as f: 
+                with open('./src/ublock_origin-1.14.10/assets/ublock/filters.txt','w') as f: 
                     for r in rules: 
                         f.write(r)
                 local_xpi = 'ublock_origin-1.14.10.xpi'
@@ -250,7 +250,7 @@ while trainingRounds < 100000:
                 msg = "PACKAGING RULES AND UBLOCK EXTENSION"
                 
                 hblogger.info(msg)
-                extension_folder = "/home/johncook/headerBidding/automation/DeployBrowsers/firefox_extensions/ublock_origin/"
+                extension_folder = "./firefox_extensions/ublock_origin/"
                 os.system('cd {}; zip -r -FS ../{} *;cd ../'.format(ublock_folder, local_xpi))
                 msg = "COPYING UBLOCK EXTENSION TO FIREFOX"
                 

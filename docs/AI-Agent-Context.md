@@ -24,7 +24,7 @@
 
 1. **Never** add, modify, or suggest code that weakens the privileged extension permission model, removes `web-ext lint --privileged`, or adds new `experiment_apis` without explicit written justification in the PR and Security-Hardening.md.
 2. **Never** introduce new uses of `pickle` for cross-process or network data (exception transport is the only current exception and must be replaced per roadmap).
-3. **Never** hardcode researcher-specific absolute paths (especially anything resembling `/home/johncook` or personal home directories).
+3. **Never** hardcode researcher-specific absolute paths (especially anything resembling `/home/<researcher>` or personal home directories).
 4. **Never** relax validation, allow-list enforcement, or redaction requirements around `execute_script`, `run_custom_function`, or bid harvesting logic.
 5. **Never** modify `manifest.json` permissions or CSP without also updating Security-Hardening.md §3 and obtaining security reviewer sign-off in the PR.
 6. **Never** commit changes that would cause an AI-orchestrated crawl to bypass intended destination controls or capability tokens (once implemented).

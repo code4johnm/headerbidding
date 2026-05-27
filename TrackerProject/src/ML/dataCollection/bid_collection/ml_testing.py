@@ -137,7 +137,7 @@ class MLTesting:
         dstUnpack = tempfile.mkdtemp()
         self.unpack(srcUnpack, dstUnpack)
         training_profile = os.path.join(dstUnpack, 'profile')
-        testing_profile_folder = '/home/johncook/headerBidding/TrackingProject/profiles/testing/load/'
+        testing_profile_folder = './profiles/testing/load/'
 
         msg = 'Copying training profile {} to testing profile folder {} '.format( training_profile+'/*', testing_profile_folder)
         
@@ -220,13 +220,13 @@ class MLTesting:
             site_name = site_name+'_{}.json'.format(category)  
             #Brosermobproxy process sticks around, I need to figure out how to gracefully close it
             # os.system('pkill -f java')
-            testing_bids = os.path.join('/home/johncook/headerBidding/TrackingProject/results/{}/'.format(bid_folder), site_name)
+            testing_bids = os.path.join('./results/{}/'.format(bid_folder), site_name)
             os.system('cat {}'.format(testing_bids))
             
             msg = 'moving testing results {} to finalized results folder {}/bids '.format( testing_bids, testing_results)
             
             self.hblogger.log(msg)
-            testing_owpm = '/home/johncook/headerBidding/TrackingProject/results/owpm/testing/{}/*'.format(timestamp)
+            testing_owpm = './results/owpm/testing/{}/*'.format(timestamp)
             
             #parse the har
             # os.system('python parse_har.py --har {} --output_path {} --ml_type {} --id {}'.format(hars,
@@ -247,8 +247,8 @@ class MLTesting:
             self.archive(finalized_path, timestamp, crawl_type)
             os.system('rm -rf {}'.format(finalized_path))
             os.system('rm -rf {}/*'.format(testing_profile_folder))
-            os.system('rm -rf /home/johncook/headerBidding/TrackingProject/results/owpm/testing/*')
-            os.system('rm -rf /home/johncook/headerBidding/TrackingProject/profiles/testing/1*')
+            os.system('rm -rf ./results/owpm/testing/*')
+            os.system('rm -rf ./profiles/testing/1*')
 
 
             msg = 'Done copying. '
