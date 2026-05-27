@@ -2,7 +2,7 @@
 
 **HeaderBidding Research Platform**  
 **Version**: 0.8.0-hb (research snapshot)  
-**Date**: 2026-05-27T02:47:30Z
+**Date**: 2026-05-27T15:30:00Z
 
 **Goal**: Improve the platform toward modern, secure, reproducible research tooling while preserving the unique header bidding measurement capabilities.
 

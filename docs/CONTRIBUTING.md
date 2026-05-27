@@ -2,7 +2,7 @@
 
 **headerbidding: Header Bidding Research Platform**  
 **Version**: 1.4.0  
-**Date**: 2026-05-27T20:00:00Z  
+**Date**: 2026-05-27T15:30:00Z  
 **Full Path**: `docs/CONTRIBUTING.md`
 
 ---

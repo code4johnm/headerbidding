@@ -2,8 +2,8 @@
 
 **headerbidding: Header Bidding Research Platform (Modernized OpenWPM)**  
 **Version**: 1.5.0  
-**Date**: 2026-05-27T20:45:00Z  
-**Last Reviewed**: 2026-05-27T20:45:00Z  
+**Date**: 2026-05-27T15:30:00Z  
+**Last Reviewed**: 2026-05-27T15:30:00Z  
 **Classification**: Public with controlled disclosure
 
 **Standards Alignment**: This policy follows ISO 27001, NIST SP 800-53, and industry best practices for vulnerability disclosure in research tooling.

@@ -7,7 +7,7 @@
 
 
 > **Version**: 1.4.0-hb (research snapshot)  
-> **Last Updated**: 2026-05-27T20:00:00Z  
+> **Last Updated**: 2026-05-27T15:30:00Z  
 > **License**: Mozilla Public License 2.0 (MPL-2.0)  
 > **Primary Standards Alignment**: OWASP Top 10 (2021), OWASP ASVS 4.0, NIST Cybersecurity Framework, ISO 27001 principles, Secure SDLC (SSDL), Zero Trust research workload practices.
 
@@ -188,7 +188,7 @@ The system follows a multi-process Zero Trust-inspired research workload model:
 - **StorageController**: Isolated writer process for structured (Parquet/SQL) and unstructured (LevelDB) backends; cloud providers optional.
 - **Legacy HB Layer**: `TrainingCrawl` / A/B state machines + ML pipelines operating on bid exports.
 
-Detailed component responsibilities, data flows, security boundaries, and Mermaid diagrams: [docs/Architecture.md](docs/Architecture.md).
+Detailed component responsibilities, data flows, security boundaries, and Mermaid diagrams: [Architecture](docs/Architecture.md).
 
 For the full Documentation Set, see below.
 
@@ -249,7 +249,7 @@ This project maintains a comprehensive, professional documentation suite designe
 
 | Document | Location | Description |
 |----------|----------|-------------|
-| [Architecture.md](docs/Architecture.md) | `docs/Architecture.md` | Primary architecture reference with Mermaid diagrams, trust boundaries, and data flows. |
+| [Architecture](docs/Architecture.md) | `Architecture.md` | Primary architecture reference with Mermaid diagrams, trust boundaries, and data flows. |
 | [Architecture-Internals.md](docs/Architecture-Internals.md) | `docs/Architecture-Internals.md` | Supplementary internal architecture details and diagrams. |
 | [Platform-Architecture.md](docs/Platform-Architecture.md) | `docs/Platform-Architecture.md` | *Legacy* – Older platform architecture documentation. |
 

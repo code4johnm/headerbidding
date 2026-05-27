@@ -2,7 +2,7 @@
 
 **headerbidding: Header Bidding Research Platform**  
 **Document Version**: 1.4.0  
-**Date**: 2026-05-27T20:00:00Z  
+**Date**: 2026-05-27T15:30:00Z  
 **Status**: Authoritative technical architecture for the modernized platform  
 **Related Documents**: [Security-Hardening.md](docs/Security-Hardening.md), [Configuration.md](docs/Configuration.md), [AGENTS.md](AGENTS.md)
 
