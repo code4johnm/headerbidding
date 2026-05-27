@@ -50,7 +50,7 @@ See [docs/Security-Hardening.md](docs/Security-Hardening.md) and [docs/SECURITY.
 
 ## Overview
 
-`headerbidding` is the active modernization effort for a specialized research fork of the [OpenWPM](https://github.com/openwpm/OpenWPM) web privacy measurement framework. It adds deep instrumentation and harvesting for header bidding / Prebid.js auction dynamics while preserving the core strengths of OpenWPM: parallel browser orchestration, comprehensive HTTP/JS/cookie telemetry, and multiple storage backends.
+`headerbidding` is the active modernization effort for a specialized research fork **based on the [OpenWPM-1776](https://github.com/code4johnm/OpenWPM-1776) fork** of [OpenWPM](https://github.com/openwpm/OpenWPM). It adds deep instrumentation and harvesting for header bidding / Prebid.js auction dynamics while preserving the core strengths of OpenWPM: parallel browser orchestration, comprehensive HTTP/JS/cookie telemetry, and multiple storage backends.
 
 **Modern Core (Recommended)**:
 - `openwpm/` – Python 3.10+ package (TaskManager, BrowserManager, command system, storage providers for SQLite/Parquet/S3/GCS/LevelDB).

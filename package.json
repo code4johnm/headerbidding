@@ -19,7 +19,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openwpm/OpenWPM.git"
+    "url": "git+https://github.com/code4johnm/OpenWPM-1776.git"
   },
   "homepage": "",
   "devDependencies": {

@@ -51,7 +51,7 @@
   "license": "MPL-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openwpm/OpenWPM.git"
+    "url": "git+https://github.com/code4johnm/OpenWPM-1776.git"
   },
   "scripts": {
     "postbuild": "cp dist/openwpm-1.0.zip openwpm.xpi",

@@ -1,15 +1,16 @@
 # OpenWPM-1776 Versioning
 
-**Document Version:** 1.4  
+**Document Version:** 1.5  
 **Base Upstream Version:** 0.34.0  
 **Fork Name:** headerbidding (OpenWPM-1776)  
-**Last Updated:** 2026-05-27T20:00:00Z
+**Base Fork:** OpenWPM-1776 (https://github.com/code4johnm/OpenWPM-1776)  
+**Last Updated:** 2026-05-27T20:45:00Z
 
 ---
 
 ## Overview
 
-This document describes the versioning approach for the **OpenWPM-1776** fork of [OpenWPM](https://github.com/openwpm/OpenWPM).
+This document describes the versioning approach for **headerbidding**, a specialized research distribution **based on the [OpenWPM-1776](https://github.com/code4johnm/OpenWPM-1776) fork** of [OpenWPM](https://github.com/openwpm/OpenWPM).
 
 headerbidding (OpenWPM-1776) is a maintained distribution focused on:
 - High-quality, professional, and well-organized documentation following industry security and research standards (OWASP, NIST CSF, SSDL, Zero Trust).
@@ -19,7 +20,7 @@ headerbidding (OpenWPM-1776) is a maintained distribution focused on:
 
 ## Base Version
 
-This fork is based on upstream OpenWPM **v0.34.0**.
+This distribution (headerbidding) is based on the [OpenWPM-1776](https://github.com/code4johnm/OpenWPM-1776) fork of upstream OpenWPM **v0.34.0** (with all robustness fixes, documentation, and modernization from that base).
 
 The current fork version is recorded in the root [VERSION](../VERSION) file (currently `1.4.0`).
 
@@ -39,6 +40,7 @@ This section provides a structured record of major changes and releases in the h
 
 | Version | Date       | Description of Changes |
 |---------|------------|------------------------|
+| 1.5.0   | 2026-05-27 | **Base hb-update on OpenWPM-1776 + Reference & Dependency Updates**<br><br>• Established OpenWPM-1776 as the canonical base for the hb-update (headerbidding) distribution: synced core Extension instrumentation source (`js-instruments.ts` with defensive guards) from OpenWPM-1776 into hb-update to ensure identical foundation.<br>• Updated all OpenWPM dependency references: `package.json` and `Extension/package.json` repository URLs changed from `openwpm/OpenWPM` to `code4johnm/OpenWPM-1776` so that the hb-update repo's declared OpenWPM base/dependencies resolve from the OpenWPM-1776 fork.<br>• Updated prose references in README.md and `docs/version.md` (Overview, Base Version, Relationship to Upstream sections) to explicitly declare "based on the OpenWPM-1776 fork".<br>• Bumped root `VERSION` 1.4.0 → 1.5.0; synchronized Document Version, dates, Last Updated, and Fork/Base declarations across docs.<br>• Added this Version History entry documenting the basing step.<br>• Executed full "build, run, test, repeat" cycle (see /tmp/msg.txt for details): Extension npm build + lint, Python import smoke tests, `pytest -m pyonly` (repeated, all green). |
 | 1.4.0   | 2026-05-27 | **Header Bidding Version Bump to 1.4.0 + Dev Cycle & Commit Message Hygiene**<br><br>• Bumped root `VERSION` from 1.3.0 → 1.4.0 and synchronized **Version**/**Document Version**/**Date**/**Last Updated** headers + version references across the full documentation suite (README.md, SECURITY.md, Build-Process.md, Architecture.md, Security-Hardening.md, Deployment.md, Configuration.md, CONTRIBUTING.md, Troubleshooting.md, AI-Agent-Context.md, and this file).<br>• Rolled back (git commit --amend) the previous commit message from long-form detailed text to the concise new "build, run, test, repeat." style message, aligning with the newly documented Iterative Development Cycle.<br>• Updated `/tmp/msg.txt` with the rolled-back short message and prepared version-bump commit narrative.<br>• Executed "build, run, test, repeat" cycle as primary workflow: baseline + post-edit verification via `python -m pytest -m pyonly` (all green), Extension npm build/lint attempts, and pre-commit hygiene checks.<br>• Added this Version History entry; reinforced that documentation + process improvements (including workflow discipline and version hygiene) are first-class triggers for fork version bumps. |
 | 1.3.0   | 2026-05-26 | **Fork Identity Normalization: OpenWPM-MAGA → OpenWPM-1776**<br><br>• Updated *all* references from the legacy "OpenWPM-MAGA" fork name to the new "OpenWPM-1776" across documentation in both the OpenWPM-1776 and hb-update repositories.<br>• Updated titles, **Fork Name** declarations, "**Workspace:**" headers, body text, SECURITY.md, Security-and-Privacy.md, and `docs/version.md`.<br>• Updated fork versioning suffix examples (`maga.N` → `1776.N`) in both projects.<br>• Added this Version History entry and refreshed the Supported Versions table in SECURITY.md.<br>• Bumped documentation suite (including this file) and root `VERSION` to 1.3.0 for alignment. |
 | 1.2.0   | 2026-04-26 | **Documentation Organization, Versioning & Rendering Polish**<br><br>**Documentation Index & Structure**<br>• Expanded the Documentation Index table in README.md to include nearly all current files in `docs/`, with clear, professional descriptions for each entry.<br>• Added missing documents such as `version.md`, `Architecture-Internals.md`, `Platform-Architecture.md`, `Release-Checklist.md`, `Schema-Documentation.md`, and `Using_OpenWPM.md`.<br>• Grouped schema-related files under a single "JSON Schema Documentation" entry for better readability.<br><br>**version.md Improvements**<br>• Added a clean "Major Accomplishments Summary (2026)" section at the top of the Major Changes area.<br>• Converted the change history into a proper, scannable Version History table.<br>• Significantly expanded and restructured the documentation of all recent work.<br><br>**Versioning**<br>• Bumped document versions to **1.2.0** consistently across the entire suite (README, Architecture, Security-Hardening, Build-Process, Deployment, Configuration, Troubleshooting, AI-Agent-Context, CONTRIBUTING, etc.).<br>• Bumped the root `VERSION` file from `0.8.0` → `1.2.0` to align with documentation versioning.<br><br>**Mermaid & Rendering**<br>• Final round of Mermaid diagram fixes in `docs/Architecture.md` for reliable GitHub rendering (removal of remaining `classDef`, inner `direction TB`, and any leftover `\n` characters).<br><br>**Path Cleanup**<br>• Performed final removal of the last absolute workspace path references from the Documentation Index.<br><br>**README Navigation Improvements**<br>• Added multiple "follow-on" references to the Documentation Set throughout key sections of README.md (Overview, Key Features & Instrumentation, Quick Start, Architecture at a Glance) to improve discoverability of the full documentation.<br>• Updated the top callout to better direct readers to the complete Documentation Set table. |
@@ -79,13 +81,14 @@ Documentation and process improvements are considered first-class changes and ma
 
 ## Relationship to Upstream
 
-We aim to stay reasonably close to upstream OpenWPM for core measurement functionality while diverging primarily in:
+headerbidding is directly based on the [OpenWPM-1776](https://github.com/code4johnm/OpenWPM-1776) fork (which itself tracks upstream OpenWPM v0.34.0 plus robustness and docs improvements). We aim to stay reasonably close to the OpenWPM-1776 base for core measurement functionality while diverging primarily in:
+- Header bidding / Prebid.js auction telemetry and A/B instrumentation (TrackerProject layer)
 - Documentation quality and completeness
 - Selected reliability and robustness improvements
 - Security and operational guidance tailored to privacy research use cases
 
-Significant upstream changes should be evaluated for merge, with preference given to changes that do not regress the improvements made in this fork.
+Significant changes from OpenWPM-1776 or upstream should be evaluated for merge, with preference given to changes that do not regress the improvements made in this distribution.
 
 ---
 
-*This document should be updated with every meaningful change or release originating from the OpenWPM-1776 fork.*
+*This document should be updated with every meaningful change or release originating from the headerbidding (OpenWPM-1776-based) distribution.*

@@ -1,8 +1,8 @@
 # Installation Guide
 
 **HeaderBidding Research Platform**  
-**Version**: 0.8.0-hb (research snapshot)  
-**Date**: 2026-05-27T02:47:30Z
+**Version**: 1.5.0  
+**Date**: 2026-05-27T20:45:00Z
 
 **WARNING (Historical)**: Older versions of this project deployed Firefox 52 ESR. The primary installation paths have been modernized (Firefox 150+ via `scripts/install-firefox.sh` + conda `environment.yaml`). Legacy scripts still exist for reference but should not be used for new work. See the updated `install.sh` and [docs/Security-Hardening.md](docs/Security-Hardening.md).
 
