@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: ./scripts/ci.sh
+      - run: bash scripts/ci.sh
         env:
           DISPLAY: ":99.0"
           GROUP: ${{ matrix.group }}
