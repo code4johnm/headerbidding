@@ -14,11 +14,12 @@ These components, together with AdFlowSim, let researchers measure *exact*
 precision/recall/FDR on synthetic graphs with known ground truth.
 """
 
-from __future__ import annotations
+from collections import defaultdict
+from typing import Dict, List, Optional, Set, Tuple
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple, Optional, Set
-from collections import defaultdict
+from __future__ import annotations
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import KBinsDiscretizer
@@ -88,7 +89,9 @@ class KashfStyleInferencer:
             self.models[adv] = clf
             self.feature_importances[adv] = importances
 
-            top_trackers = importances.head(self.top_k).index.str.replace("tracker_", "").tolist()
+            top_trackers = (
+                importances.head(self.top_k).index.str.replace("tracker_", "").tolist()
+            )
 
             results[adv] = {
                 "accuracy": float(acc),
@@ -167,13 +170,15 @@ class CausalKashfInferencer:
         ci_low = np.percentile(imps, 2.5, axis=0)
         ci_high = np.percentile(imps, 97.5, axis=0)
 
-        return pd.DataFrame({
-            "feature": feature_names,
-            "importance_mean": mean_imp,
-            "ci_low": ci_low,
-            "ci_high": ci_high,
-            "significant": (ci_low > 0.0)  # crude; better methods exist
-        }).sort_values("importance_mean", ascending=False)
+        return pd.DataFrame(
+            {
+                "feature": feature_names,
+                "importance_mean": mean_imp,
+                "ci_low": ci_low,
+                "ci_high": ci_high,
+                "significant": (ci_low > 0.0),  # crude; better methods exist
+            }
+        ).sort_values("importance_mean", ascending=False)
 
     def fit(
         self,
@@ -204,17 +209,24 @@ class CausalKashfInferencer:
                 # Treat creative score as auxiliary regression target
                 y_cre = df[f"creative_score_{adv}"].values
                 # Simple fusion: weight the classification importance
-                clf = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state)
+                clf = RandomForestClassifier(
+                    n_estimators=self.n_estimators, random_state=self.random_state
+                )
                 clf.fit(X, y_bid)
                 imp_bid = clf.feature_importances_
 
-                reg = RandomForestRegressor(n_estimators=self.n_estimators // 2, random_state=self.random_state + 1)
+                reg = RandomForestRegressor(
+                    n_estimators=self.n_estimators // 2,
+                    random_state=self.random_state + 1,
+                )
                 reg.fit(X, y_cre)
                 imp_cre = reg.feature_importances_
 
                 importance = 0.65 * imp_bid + 0.35 * imp_cre
             else:
-                clf = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state)
+                clf = RandomForestClassifier(
+                    n_estimators=self.n_estimators, random_state=self.random_state
+                )
                 clf.fit(X, y_bid)
                 importance = clf.feature_importances_
 
@@ -226,19 +238,33 @@ class CausalKashfInferencer:
 
             results[adv] = {
                 "bootstrap_importance": boot_df,
-                "cv_accuracy": float(np.mean(cross_val_score(
-                    RandomForestClassifier(n_estimators=120, random_state=self.random_state),
-                    X, y_bid, cv=5
-                ))),
+                "cv_accuracy": float(
+                    np.mean(
+                        cross_val_score(
+                            RandomForestClassifier(
+                                n_estimators=120, random_state=self.random_state
+                            ),
+                            X,
+                            y_bid,
+                            cv=5,
+                        )
+                    )
+                ),
             }
 
         # === The critical piece: automated, target-FDR cutoff ===
-        threshold = self._learn_fdr_calibrated_threshold(results, calibration_df, tracker_cols)
+        threshold = self._learn_fdr_calibrated_threshold(
+            results, calibration_df, tracker_cols
+        )
 
         # Apply threshold + optional mediation hint
         for adv in results:
             boot = results[adv]["bootstrap_importance"]
-            selected = boot[boot["importance_mean"] >= threshold]["feature"].str.replace("tracker_", "").tolist()
+            selected = (
+                boot[boot["importance_mean"] >= threshold]["feature"]
+                .str.replace("tracker_", "")
+                .tolist()
+            )
             results[adv]["selected_trackers"] = selected
             results[adv]["cutoff_threshold"] = float(threshold)
             results[adv]["method"] = "causalkashf_v1"
@@ -272,10 +298,14 @@ class CausalKashfInferencer:
             for _, row in boot.iterrows():
                 t = row["feature"].replace("tracker_", "")
                 # The calibration DF must encode ground truth per (tracker, adv) pair
-                is_true = 1 if calibration_df[
-                    (calibration_df["advertiser"] == adv) &
-                    (calibration_df["tracker"] == t)
-                ]["true_influencer"].values[0] else 0
+                is_true = (
+                    1
+                    if calibration_df[
+                        (calibration_df["advertiser"] == adv)
+                        & (calibration_df["tracker"] == t)
+                    ]["true_influencer"].values[0]
+                    else 0
+                )
                 pool.append((row["importance_mean"], is_true))
 
         if not pool:
@@ -318,12 +348,14 @@ class CausalKashfInferencer:
         for adv, res in self.results.items():
             selected = res.get("selected_trackers", [])
             for t in selected:
-                candidates.append({
-                    "tracker": t,
-                    "advertiser": adv,
-                    "note": "2-hop detection not yet implemented in this lightweight version; "
-                            "see full CausalKashf paper + simulator for complete mediation tests."
-                })
+                candidates.append(
+                    {
+                        "tracker": t,
+                        "advertiser": adv,
+                        "note": "2-hop detection not yet implemented in this lightweight version; "
+                        "see full CausalKashf paper + simulator for complete mediation tests.",
+                    }
+                )
         return candidates
 
 

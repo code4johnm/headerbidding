@@ -17,36 +17,40 @@ Researchers can therefore compute *exact* precision, recall, and FDR for any inf
 method — something impossible on real web data.
 """
 
-from __future__ import annotations
-import numpy as np
-import pandas as pd
-from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Optional, Set, Any
-from collections import defaultdict
 import json
 import random
+from collections import defaultdict
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+import numpy as np
+import pandas as pd
+from __future__ import annotations
 
 
 @dataclass
 class AdEcosystemGraph:
     """A complete synthetic ad ecosystem with ground-truth data flows."""
+
     # Nodes
-    trackers: List[str]                    # e.g., "DoubleVerify", "Alphabet", ...
-    intermediaries: List[str]              # SSPs, AdX, DMPs, clean rooms, ID providers
-    advertisers: List[str]                 # DSPs / bidders / advertisers
+    trackers: List[str]  # e.g., "DoubleVerify", "Alphabet", ...
+    intermediaries: List[str]  # SSPs, AdX, DMPs, clean rooms, ID providers
+    advertisers: List[str]  # DSPs / bidders / advertisers
 
     # Ground-truth directed edges (data sharing)
     # Format: (source, target, edge_type, fidelity) where fidelity in [0,1] = how much info preserved
     direct_edges: List[Tuple[str, str, str, float]]
 
     # Derived: full transitive closure for simulation (who can ultimately influence whom)
-    influence_paths: Dict[str, List[List[str]]]  # advertiser -> list of paths that reach it
+    influence_paths: Dict[
+        str, List[List[str]]
+    ]  # advertiser -> list of paths that reach it
 
     # Tracker coverage (fraction of "sites" on which each tracker appears)
     tracker_coverage: Dict[str, float]
 
     # Organizational grouping (for testing the crude mitigation used in original Kashf)
-    org_groups: Dict[str, str]               # entity -> org (e.g., "doubleclick.net" -> "Alphabet")
+    org_groups: Dict[str, str]  # entity -> org (e.g., "doubleclick.net" -> "Alphabet")
 
     # Metadata + simulation parameters (needed by harness)
     difficulty: str
@@ -59,10 +63,13 @@ class AdEcosystemGraph:
 @dataclass
 class InterventionResult:
     """Result of one controlled intervention experiment."""
+
     persona_id: int
-    blocked_trackers: Set[str]             # the orgs we blocked during persona construction
-    advertiser_bids: Dict[str, float]      # advertiser -> observed (synthetic) bid
-    creative_topics: Dict[str, List[str]]  # advertiser -> list of topics in delivered creatives
+    blocked_trackers: Set[str]  # the orgs we blocked during persona construction
+    advertiser_bids: Dict[str, float]  # advertiser -> observed (synthetic) bid
+    creative_topics: Dict[
+        str, List[str]
+    ]  # advertiser -> list of topics in delivered creatives
     # Future: other signals (Topics leakage, storage side effects, etc.)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -120,7 +127,14 @@ class EcosystemGenerator:
 
         # 2. Organizational grouping (crude mitigation from original paper)
         org_groups = {}
-        org_names = ["BigTech", "AdTech1", "AdTech2", "Measurement", "Identity", "Retail"]
+        org_names = [
+            "BigTech",
+            "AdTech1",
+            "AdTech2",
+            "Measurement",
+            "Identity",
+            "Retail",
+        ]
         for i, t in enumerate(trackers):
             org_groups[t] = org_names[i % len(org_names)]
         for i, a in enumerate(advertisers):
@@ -143,30 +157,40 @@ class EcosystemGenerator:
             src = random.choice(trackers)
             dst = random.choice([t for t in trackers if t != src])
             fidelity = 0.65 + self.rng.uniform(-0.15, 0.25)
-            direct_edges.append((src, dst, "tracker_tracker", float(np.clip(fidelity, 0.3, 0.95))))
+            direct_edges.append(
+                (src, dst, "tracker_tracker", float(np.clip(fidelity, 0.3, 0.95)))
+            )
 
         # 4b. Tracker -> Intermediary (very common)
         for t in trackers[: int(self.n_trackers * 0.7)]:
             for inter in random.sample(intermediaries, k=min(2, len(intermediaries))):
                 if self.rng.random() < 0.55:
                     fid = 0.75 + self.rng.uniform(-0.1, 0.2)
-                    direct_edges.append((t, inter, "tracker_inter", float(np.clip(fid, 0.4, 0.98))))
+                    direct_edges.append(
+                        (t, inter, "tracker_inter", float(np.clip(fid, 0.4, 0.98)))
+                    )
 
         # 4c. Intermediary -> Advertiser (the classic server-side path)
         for inter in intermediaries:
             for a in random.sample(advertisers, k=min(3, len(advertisers))):
                 if self.rng.random() < 0.45:
                     fid = 0.70 + self.rng.uniform(-0.12, 0.22)
-                    direct_edges.append((inter, a, "inter_advertiser", float(np.clip(fid, 0.35, 0.97))))
+                    direct_edges.append(
+                        (inter, a, "inter_advertiser", float(np.clip(fid, 0.35, 0.97)))
+                    )
 
         # 4d. Direct Tracker -> Advertiser (client-side cookie sync style or strong partnerships)
-        n_direct = int(self.n_trackers * 0.4 * (0.6 if self.difficulty == "easy" else 0.9))
+        n_direct = int(
+            self.n_trackers * 0.4 * (0.6 if self.difficulty == "easy" else 0.9)
+        )
         for _ in range(n_direct):
             t = random.choice(trackers)
             a = random.choice(advertisers)
             if not any(e[0] == t and e[1] == a for e in direct_edges):
                 fid = 0.80 + self.rng.uniform(-0.08, 0.15)
-                direct_edges.append((t, a, "direct_ta", float(np.clip(fid, 0.55, 0.99))))
+                direct_edges.append(
+                    (t, a, "direct_ta", float(np.clip(fid, 0.55, 0.99)))
+                )
 
         # 5. Compute influence paths for every advertiser (transitive closure + path enumeration)
         # This is the "ground truth" of who can affect whom
@@ -177,7 +201,13 @@ class EcosystemGenerator:
         for src, dst, etype, fid in direct_edges:
             adj[src].append((dst, fid))
 
-        def dfs_paths(current: str, target: str, path: List[str], visited: Set[str], max_depth: int = 5):
+        def dfs_paths(
+            current: str,
+            target: str,
+            path: List[str],
+            visited: Set[str],
+            max_depth: int = 5,
+        ):
             if len(path) > max_depth:
                 return
             if current == target and len(path) > 1:
@@ -215,14 +245,25 @@ class EcosystemGenerator:
         if self.difficulty != "easy":
             for a in advertisers[: max(2, self.n_advertisers // 3)]:
                 upstream = random.choice(trackers)
-                mid = random.choice([t for t in trackers if t != upstream] + intermediaries)
+                mid = random.choice(
+                    [t for t in trackers if t != upstream] + intermediaries
+                )
                 # Ensure path upstream -> mid -> ... -> a exists indirectly
                 if not any(e[0] == upstream and e[1] == a for e in direct_edges):
                     # Add the mid->a if needed to create the chain
                     if not any(e[0] == mid and e[1] == a for e in direct_edges):
-                        direct_edges.append((mid, a, "indirect_setup", 0.6 + self.rng.uniform(0, 0.2)))
+                        direct_edges.append(
+                            (mid, a, "indirect_setup", 0.6 + self.rng.uniform(0, 0.2))
+                        )
                     if not any(e[0] == upstream and e[1] == mid for e in direct_edges):
-                        direct_edges.append((upstream, mid, "indirect_setup", 0.65 + self.rng.uniform(0, 0.15)))
+                        direct_edges.append(
+                            (
+                                upstream,
+                                mid,
+                                "indirect_setup",
+                                0.65 + self.rng.uniform(0, 0.15),
+                            )
+                        )
 
         graph = AdEcosystemGraph(
             trackers=trackers,
@@ -244,7 +285,9 @@ class EcosystemGenerator:
         """Return the set of (source, target) direct edges (for evaluation)."""
         return {(src, dst) for src, dst, _, _ in graph.direct_edges}
 
-    def get_true_influencers(self, graph: AdEcosystemGraph, advertiser: str, max_hops: int = 4) -> Set[str]:
+    def get_true_influencers(
+        self, graph: AdEcosystemGraph, advertiser: str, max_hops: int = 4
+    ) -> Set[str]:
         """All trackers that can ultimately influence this advertiser (any path length)."""
         influencers = set()
         for path in graph.influence_paths.get(advertiser, []):
@@ -274,15 +317,26 @@ class InterventionHarness:
 
         # Simple topic model (16 categories like the original paper)
         self.topics = [
-            "Adult", "Arts", "Business", "Computers", "Games", "Health",
-            "Home", "Kids", "News", "Recreation", "Reference", "Science",
-            "Shopping", "Society", "Sports", "Regional"
+            "Adult",
+            "Arts",
+            "Business",
+            "Computers",
+            "Games",
+            "Health",
+            "Home",
+            "Kids",
+            "News",
+            "Recreation",
+            "Reference",
+            "Science",
+            "Shopping",
+            "Society",
+            "Sports",
+            "Regional",
         ]
 
     def _propagate_features(
-        self,
-        activated_trackers: Set[str],
-        blocked: Set[str]
+        self, activated_trackers: Set[str], blocked: Set[str]
     ) -> Dict[str, Dict[str, float]]:
         """
         Simulate data flow from activated trackers through the graph,
@@ -290,7 +344,9 @@ class InterventionHarness:
         """
         # Each tracker that is active and not blocked injects a feature vector
         # (simplified: one scalar "interest strength" per topic for demo purposes)
-        received: Dict[str, Dict[str, float]] = {a: defaultdict(float) for a in self.graph.advertisers}
+        received: Dict[str, Dict[str, float]] = {
+            a: defaultdict(float) for a in self.graph.advertisers
+        }
 
         # For each activated tracker, propagate along all paths
         for t in activated_trackers:
@@ -305,7 +361,7 @@ class InterventionHarness:
                     continue
                 visited.add(node)
                 for neigh, edge_fid, etype in self.adj.get(node, []):
-                    new_fid = fid * edge_fid * (0.92 ** hops)  # decay with hops
+                    new_fid = fid * edge_fid * (0.92**hops)  # decay with hops
                     if new_fid < 0.05:
                         continue
                     if neigh.startswith("A"):  # reached an advertiser
@@ -313,7 +369,9 @@ class InterventionHarness:
                         strength = new_fid * (0.7 + 0.6 * self.rng.random())
                         # Distribute across a few topics (simplified)
                         for topic in random.sample(self.topics, 3):
-                            received[neigh][topic] += strength * (0.6 + 0.8 * self.rng.random())
+                            received[neigh][topic] += strength * (
+                                0.6 + 0.8 * self.rng.random()
+                            )
                     else:
                         queue.append((neigh, new_fid, hops + 1))
         return received
@@ -323,7 +381,7 @@ class InterventionHarness:
         advertiser: str,
         received_features: Dict[str, float],
         persona_topics: List[str],
-        intent: bool = False
+        intent: bool = False,
     ) -> float:
         """
         Advertiser's (synthetic) bid value given the data it received.
@@ -348,7 +406,7 @@ class InterventionHarness:
         self,
         advertiser: str,
         received_features: Dict[str, float],
-        persona_topics: List[str]
+        persona_topics: List[str],
     ) -> List[str]:
         """Which ad topics the advertiser chooses to show given its data."""
         scores = {}
@@ -369,15 +427,18 @@ class InterventionHarness:
         blocked_trackers: Set[str],
         persona_topics: List[str],
         intent: bool = False,
-        n_repeats: int = 1
+        n_repeats: int = 1,
     ) -> List[InterventionResult]:
         """
         Run one controlled experiment: a persona with certain trackers blocked
         visits a page; we record what each advertiser "sees" (bids + creatives).
         """
         results = []
-        activated = {t for t in self.graph.trackers
-                     if self.rng.random() < self.graph.tracker_coverage.get(t, 0.1)}
+        activated = {
+            t
+            for t in self.graph.trackers
+            if self.rng.random() < self.graph.tracker_coverage.get(t, 0.1)
+        }
 
         received = self._propagate_features(activated, blocked_trackers)
 
@@ -397,7 +458,7 @@ class InterventionHarness:
                     "intent": intent,
                     "activated_trackers": len(activated),
                     "difficulty": self.graph.difficulty,
-                }
+                },
             )
             results.append(res)
         return results
@@ -407,7 +468,7 @@ class InterventionHarness:
         n_personas: int = 2000,
         block_rate: float = 0.25,
         include_intent: bool = True,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
     ) -> pd.DataFrame:
         """
         The main entry point used by inference code.
@@ -430,10 +491,14 @@ class InterventionHarness:
 
             # Randomly decide which tracker orgs to "block" for this persona
             # (In real Kashf this was done by blocking their domains during crawl)
-            blocked = set(random.sample(all_trackers, k=int(len(all_trackers) * block_rate)))
+            blocked = set(
+                random.sample(all_trackers, k=int(len(all_trackers) * block_rate))
+            )
 
             # One "measurement" visit (in real work this was one HB-enabled site)
-            res_list = self.run_single_intervention(pid, blocked, persona_topics, intent, n_repeats=1)
+            res_list = self.run_single_intervention(
+                pid, blocked, persona_topics, intent, n_repeats=1
+            )
             res = res_list[0]
 
             row = {
@@ -449,7 +514,9 @@ class InterventionHarness:
             for a in self.graph.advertisers:
                 row[f"bid_{a}"] = res.advertiser_bids[a]
                 # Simple encoding of creatives: count how many high-value topics matched
-                row[f"creative_score_{a}"] = len(set(res.creative_topics[a]) & set(persona_topics))
+                row[f"creative_score_{a}"] = len(
+                    set(res.creative_topics[a]) & set(persona_topics)
+                )
 
             records.append(row)
 
@@ -457,7 +524,11 @@ class InterventionHarness:
 
     def get_ground_truth_for_advertiser(self, advertiser: str) -> Dict[str, Any]:
         """Return perfect ground truth for evaluation."""
-        direct = {(src, dst) for src, dst, _, _ in self.graph.direct_edges if dst == advertiser}
+        direct = {
+            (src, dst)
+            for src, dst, _, _ in self.graph.direct_edges
+            if dst == advertiser
+        }
         influencers = set()
         for path in self.graph.influence_paths.get(advertiser, []):
             for node in path[:-1]:
@@ -481,8 +552,12 @@ def generate_and_run(
     seed: int = 42,
 ) -> Tuple[AdEcosystemGraph, pd.DataFrame, InterventionHarness]:
     """One-liner for notebooks and quick experiments."""
-    gen = EcosystemGenerator(difficulty=difficulty, n_trackers=n_trackers,
-                             n_advertisers=n_advertisers, seed=seed)
+    gen = EcosystemGenerator(
+        difficulty=difficulty,
+        n_trackers=n_trackers,
+        n_advertisers=n_advertisers,
+        seed=seed,
+    )
     G = gen.generate()
     harness = InterventionHarness(G, seed=seed + 1)
     df = harness.run_full_experiment_suite(n_personas=n_personas, seed=seed + 2)

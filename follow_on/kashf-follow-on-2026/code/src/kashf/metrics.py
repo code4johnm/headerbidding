@@ -8,10 +8,11 @@ They let us report the exact quantities the 2020 authors could not compute:
 - Whether a proposed automated cutoff actually controls error rate
 """
 
-from __future__ import annotations
-from typing import Set, Tuple, Dict, List, Any
-import pandas as pd
+from typing import Any, Dict, List, Set, Tuple
+
 import numpy as np
+import pandas as pd
+from __future__ import annotations
 
 
 def fdr_aware_precision_recall(
@@ -65,11 +66,13 @@ def edge_recovery_report(
     rows = []
     for method, edges in inferred_by_method.items():
         m = fdr_aware_precision_recall(edges, true_direct, true_any_influence)
-        rows.append({
-            "method": method,
-            **m,
-            "n_direct_recovered": m["n_tp"],
-        })
+        rows.append(
+            {
+                "method": method,
+                **m,
+                "n_direct_recovered": m["n_tp"],
+            }
+        )
 
     df = pd.DataFrame(rows).sort_values("fdr")
     return df
@@ -99,15 +102,21 @@ def analyze_cutoff_sensitivity(
 
         for tgt in target_fdrs:
             if abs(fdr - tgt) < 0.03:
-                results.append({
-                    "threshold": round(thresh, 5),
-                    "achieved_fdr": round(fdr, 4),
-                    "recall": round(rec, 4),
-                    "n_selected": len(sel),
-                    "target_fdr": tgt,
-                })
+                results.append(
+                    {
+                        "threshold": round(thresh, 5),
+                        "achieved_fdr": round(fdr, 4),
+                        "recall": round(rec, 4),
+                        "n_selected": len(sel),
+                        "target_fdr": tgt,
+                    }
+                )
 
-    return pd.DataFrame(results).drop_duplicates(subset=["target_fdr"]).sort_values("target_fdr")
+    return (
+        pd.DataFrame(results)
+        .drop_duplicates(subset=["target_fdr"])
+        .sort_values("target_fdr")
+    )
 
 
 def chain_failure_cases(

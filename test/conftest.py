@@ -41,7 +41,10 @@ def enable_subprocess_coverage():
 
 def xpi():
     # Creates a new xpi using npm run build.
+    # npm ci first: tsc fails with TS2688 if @types/firefox-webext-browser
+    # is not installed (CI never ran npm ci in Extension/).
     print("Building new xpi")
+    subprocess.check_call(["npm", "ci", "--ignore-scripts"], cwd=EXTENSION_DIR)
     subprocess.check_call(["npm", "run", "build"], cwd=EXTENSION_DIR)
 
 

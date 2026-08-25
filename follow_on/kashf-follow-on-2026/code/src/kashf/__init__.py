@@ -15,10 +15,10 @@ All artifacts directly target the limitations and future work stated in §4.4 of
 __version__ = "0.1.0"
 __paper__ = "popets-2020-0005"
 
+from .baselines import run_atom_style_baseline, run_kashf_baseline
+from .inference import CausalKashfInferencer, KashfStyleInferencer
+from .metrics import edge_recovery_report, fdr_aware_precision_recall
 from .simulator import EcosystemGenerator, InterventionHarness
-from .inference import KashfStyleInferencer, CausalKashfInferencer
-from .metrics import fdr_aware_precision_recall, edge_recovery_report
-from .baselines import run_kashf_baseline, run_atom_style_baseline
 
 __all__ = [
     "EcosystemGenerator",

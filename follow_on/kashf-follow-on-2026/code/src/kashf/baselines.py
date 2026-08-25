@@ -6,9 +6,11 @@ compared head-to-head against new techniques on identical synthetic data.
 - run_atom_style_baseline: simplified version of the 2022 ATOM creative-based approach
 """
 
-from __future__ import annotations
+from typing import Dict, List, Set, Tuple
+
 import pandas as pd
-from typing import Dict, Set, Tuple, List
+from __future__ import annotations
+
 from .inference import KashfStyleInferencer
 
 
@@ -71,8 +73,11 @@ def run_atom_style_baseline(
             if len(with_t) > 5 and len(without_t) > 5:
                 diff = with_t.mean() - without_t.mean()
                 pooled_std = np.sqrt(
-                    ((len(with_t)-1)*with_t.var() + (len(without_t)-1)*without_t.var()) /
-                    (len(with_t) + len(without_t) - 2)
+                    (
+                        (len(with_t) - 1) * with_t.var()
+                        + (len(without_t) - 1) * without_t.var()
+                    )
+                    / (len(with_t) + len(without_t) - 2)
                 )
                 effect = diff / (pooled_std + 1e-9)
 
