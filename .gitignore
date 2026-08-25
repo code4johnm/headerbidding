@@ -105,6 +105,7 @@ node_modules
 ######################
 *.log
 *.sql
+!openwpm/storage/schema.sql
 *.sqlite
 
 # OS generated files #

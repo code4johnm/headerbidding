@@ -7,7 +7,8 @@
 # via the instructions at https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
 
 # Ref: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/use-conda-with-travis-ci.html
-wget -q "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" -O conda.sh;
+wget -q --timeout=30 --tries=3 --waitretry=5 \
+  "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" -O conda.sh
 bash conda.sh -b -p $HOME/conda
 source "$HOME/conda/etc/profile.d/conda.sh"
 hash -r
