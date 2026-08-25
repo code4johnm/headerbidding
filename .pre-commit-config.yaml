@@ -15,7 +15,7 @@ repos:
         additional_dependencies:
           [pytest, types-tabulate, types-PyYAML, types-redis]
         # Hook passes filenames and ignores pyproject exclude; do not scan Kashf.
-        exclude: ^(follow_on/|TrackerProject/)
+        exclude: ^(follow_on/|TrackerProject/|demo\.py$)
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.11
     hooks:

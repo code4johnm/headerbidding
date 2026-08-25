@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+from typing import Literal
 
 from openwpm.command_sequence import CommandSequence
 from openwpm.config import BrowserParams, ManagerParams
@@ -23,7 +24,9 @@ def main() -> None:
         help="Run Firefox in headless mode (used by CI).",
     )
     args = parser.parse_args()
-    display_mode = "headless" if args.headless else "native"
+    display_mode: Literal["native", "headless"] = (
+        "headless" if args.headless else "native"
+    )
 
     data_dir = Path("./datadir/")
     data_dir.mkdir(parents=True, exist_ok=True)

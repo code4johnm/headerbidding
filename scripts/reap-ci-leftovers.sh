@@ -22,10 +22,11 @@ reap_pattern 'firefox-bin/firefox'
 reap_pattern 'firefox/firefox'
 reap_pattern 'geckodriver'
 reap_pattern '[X]vfb'
+reap_pattern 'StorageController'
 
 sleep 2
 
-for pattern in 'firefox-bin/firefox' 'firefox/firefox' 'geckodriver' '[X]vfb'; do
+for pattern in 'firefox-bin/firefox' 'firefox/firefox' 'geckodriver' '[X]vfb' 'StorageController'; do
   pids="$(pgrep -f "$pattern" || true)"
   if [ -n "${pids}" ]; then
     echo "KILL ${pattern}: ${pids}"

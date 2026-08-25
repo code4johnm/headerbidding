@@ -49,7 +49,7 @@ jobs:
 
   pre-commit:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -57,7 +57,9 @@ jobs:
 
   demo:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    # Unbounded demo on #56 sat 6h after schema.sql FileNotFoundError.
+    # This bounds the job; it does not hide a hang (inner timeout is 15m).
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -67,7 +69,7 @@ jobs:
         run: bash scripts/reap-ci-leftovers.sh
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
     strategy:
       matrix:
         group: [1, 2, 3, 4, 5, 6, 7]
