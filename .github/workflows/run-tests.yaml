@@ -9,8 +9,39 @@ on:
   merge_group:
   schedule:
     - cron: "0 0 */2 * *"
+  workflow_dispatch:
 
 jobs:
+  # Real check that does not need conda/Firefox. Run #53 (and every
+  # scheduled run after May 2026) died in ./.github/actions/setup with
+  # exit 126: scripts/install-conda.sh was mode 100644 (Permission denied).
+  # This job fails if those execute bits regress.
+  ci-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify CI scripts are executable and parse
+        run: |
+          set -euo pipefail
+          failed=0
+          for f in scripts/install-conda.sh scripts/install-firefox.sh scripts/ci.sh \
+                   scripts/build-extension.sh scripts/repin.sh scripts/run-on-osx-via-docker.sh; do
+            if [ ! -f "$f" ]; then
+              echo "::error file=$f::missing"
+              failed=1
+              continue
+            fi
+            if [ ! -x "$f" ]; then
+              echo "::error file=$f::not executable (GitHub Actions exit 126)"
+              failed=1
+            fi
+            bash -n "$f"
+            echo "ok $f mode=$(stat -c '%a' "$f")"
+          done
+          exit "$failed"
+      - name: Syntax-check Python sources
+        run: python3 -m compileall -q openwpm test demo.py crawler.py custom_command.py
+
   pre-commit:
     runs-on: ubuntu-latest
     steps:
