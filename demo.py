@@ -15,6 +15,17 @@ def _reap_leftover_ci_processes() -> None:
     if script.is_file():
         subprocess.call(["bash", str(script)])
 
+
+def _ensure_extension_xpi() -> None:
+    """Demo needs Extension/openwpm.xpi; tests build it in the xpi fixture."""
+    xpi = Path(__file__).resolve().parent / "Extension" / "openwpm.xpi"
+    if xpi.is_file():
+        return
+    ext = xpi.parent
+    subprocess.check_call(["npm", "ci", "--ignore-scripts"], cwd=ext)
+    subprocess.check_call(["npm", "run", "build"], cwd=ext)
+
+
 # The list of sites that we wish to crawl
 NUM_BROWSERS = 3
 sites = [
@@ -26,6 +37,7 @@ sites = [
 
 def main() -> None:
     atexit.register(_reap_leftover_ci_processes)
+    _ensure_extension_xpi()
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--headless",
