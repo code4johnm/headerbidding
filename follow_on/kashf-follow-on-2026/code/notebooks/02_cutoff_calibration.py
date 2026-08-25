@@ -8,21 +8,23 @@ a threshold that actually achieves a user-specified error tolerance.
 Run:
     python 02_cutoff_calibration.py
 """
+
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from kashf.inference import CausalKashfInferencer, KashfStyleInferencer
+from kashf.metrics import analyze_cutoff_sensitivity, fdr_aware_precision_recall
 from kashf.simulator import EcosystemGenerator, InterventionHarness
-from kashf.inference import KashfStyleInferencer, CausalKashfInferencer
-from kashf.metrics import fdr_aware_precision_recall, analyze_cutoff_sensitivity
 
-print("="*72)
+print("=" * 72)
 print("DEMONSTRATION: Automated FDR-controlled cutoff selection")
 print("Direct response to Kashf et al. PoPETs 2020 §4.4 future work item")
-print("="*72)
+print("=" * 72)
 
 # Generate a medium-difficulty world
 gen = EcosystemGenerator(difficulty="medium", n_trackers=24, n_advertisers=6, seed=123)
@@ -39,15 +41,15 @@ for a in advs:
     truth = harness.get_ground_truth_for_advertiser(a)
     true_ts = set(truth["all_influencing_trackers"])
     for t in G.trackers:
-        calib_rows.append({
-            "advertiser": a,
-            "tracker": t,
-            "true_influencer": 1 if t in true_ts else 0
-        })
+        calib_rows.append(
+            {"advertiser": a, "tracker": t, "true_influencer": 1 if t in true_ts else 0}
+        )
 calib_df = pd.DataFrame(calib_rows)
 
-print(f"\nSynthetic ecosystem: {len(G.direct_edges)} direct edges, "
-      f"{sum(len(p) for p in G.influence_paths.values())} total influence paths")
+print(
+    f"\nSynthetic ecosystem: {len(G.direct_edges)} direct edges, "
+    f"{sum(len(p) for p in G.influence_paths.values())} total influence paths"
+)
 
 # Run the original method
 print("\n[1] Original Kashf (fixed top-3 cutoff)")
@@ -56,7 +58,16 @@ k_res = kashf.fit(df, advs)
 k_edges = set()
 for r in k_res.values():
     for t in r["top_k_trackers"]:
-        k_edges.add((t, r["top_k_trackers"][0].split("_")[-1] if False else list(k_res.keys())[0]))  # fix below
+        k_edges.add(
+            (
+                t,
+                (
+                    r["top_k_trackers"][0].split("_")[-1]
+                    if False
+                    else list(k_res.keys())[0]
+                ),
+            )
+        )  # fix below
 
 # Simpler: collect edges properly
 k_edges = set()
@@ -64,8 +75,14 @@ for adv, r in k_res.items():
     for t in r["top_k_trackers"]:
         k_edges.add((t, adv))
 
-k_metrics = fdr_aware_precision_recall(k_edges, 
-    {(s,d) for s,d,_,_ in G.direct_edges if s.startswith('T') and d.startswith('A')})
+k_metrics = fdr_aware_precision_recall(
+    k_edges,
+    {
+        (s, d)
+        for s, d, _, _ in G.direct_edges
+        if s.startswith("T") and d.startswith("A")
+    },
+)
 
 print(f"    Empirical FDR achieved by top-3 rule: {k_metrics['fdr']:.1%}")
 print(f"    (Note: this varies wildly across different random ecosystems)")
@@ -76,8 +93,14 @@ causal = CausalKashfInferencer(target_fdr=0.10, n_bootstrap=15)
 c_res = causal.fit(df, advs, calibration_df=calib_df)
 
 c_edges = causal.get_inferred_edges()
-c_metrics = fdr_aware_precision_recall(c_edges,
-    {(s,d) for s,d,_,_ in G.direct_edges if s.startswith('T') and d.startswith('A')})
+c_metrics = fdr_aware_precision_recall(
+    c_edges,
+    {
+        (s, d)
+        for s, d, _, _ in G.direct_edges
+        if s.startswith("T") and d.startswith("A")
+    },
+)
 
 print(f"    Target FDR: 10%")
 print(f"    Achieved FDR on this graph: {c_metrics['fdr']:.1%}")
@@ -95,16 +118,24 @@ print("\n[4] Generating cutoff sensitivity curve (what the notebook visualizes).
 # For one advertiser, collect importance + ground truth label
 one_adv = advs[0]
 imp_df = c_res[one_adv]["bootstrap_importance"].copy()
-imp_df["is_true"] = imp_df["feature"].str.replace("tracker_","").apply(
-    lambda t: 1 if (t, one_adv) in {(s,d) for s,d,_,_ in G.direct_edges if d==one_adv} else 0
+imp_df["is_true"] = (
+    imp_df["feature"]
+    .str.replace("tracker_", "")
+    .apply(
+        lambda t: (
+            1
+            if (t, one_adv) in {(s, d) for s, d, _, _ in G.direct_edges if d == one_adv}
+            else 0
+        )
+    )
 )
 
 sens = analyze_cutoff_sensitivity(imp_df, target_fdrs=[0.05, 0.10, 0.15])
 print(sens.to_string(index=False))
 
-print("\n" + "="*72)
+print("\n" + "=" * 72)
 print("CONCLUSION")
 print("With AdFlowSim we can finally do what the 2020 authors wanted to do:")
 print("  pick a threshold that gives a *known, controlled* error rate")
 print("  instead of hoping that 'top-3' is good enough.")
-print("="*72)
+print("=" * 72)

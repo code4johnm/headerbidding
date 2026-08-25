@@ -9,21 +9,67 @@ on:
   merge_group:
   schedule:
     - cron: "0 0 */2 * *"
+  workflow_dispatch:
 
 jobs:
-  pre-commit:
+  # Real check that does not need conda/Firefox. Run #53 (and every
+  # scheduled run after May 2026) died in ./.github/actions/setup with
+  # exit 126: scripts/install-conda.sh was mode 100644 (Permission denied).
+  # This job fails if those execute bits regress.
+  ci-scripts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify CI scripts are executable and parse
+        run: |
+          set -euo pipefail
+          failed=0
+          for f in scripts/install-conda.sh scripts/install-firefox.sh scripts/ci.sh \
+                   scripts/reap-ci-leftovers.sh \
+                   scripts/build-extension.sh scripts/repin.sh scripts/run-on-osx-via-docker.sh; do
+            if [ ! -f "$f" ]; then
+              echo "::error file=$f::missing"
+              failed=1
+              continue
+            fi
+            if [ ! -x "$f" ]; then
+              echo "::error file=$f::not executable (GitHub Actions exit 126)"
+              failed=1
+            fi
+            bash -n "$f"
+            echo "ok $f mode=$(stat -c '%a' "$f")"
+          done
+          if [ ! -f openwpm/storage/schema.sql ]; then
+            echo "::error file=openwpm/storage/schema.sql::missing (StorageController hang / FileNotFoundError)"
+            failed=1
+          fi
+          exit "$failed"
+      - name: Syntax-check Python sources
+        run: python3 -m compileall -q openwpm test demo.py crawler.py custom_command.py
+
+  pre-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pre-commit run --all
+      - run: timeout --signal=TERM --kill-after=30s 12m pre-commit run --all
+      - name: Reap leftover pre-commit processes
+        if: always()
+        run: bash scripts/reap-ci-leftovers.sh
 
   demo:
     runs-on: ubuntu-latest
+    # Unbounded demo on #56 sat 6h after schema.sql FileNotFoundError.
+    # This bounds the job; it does not hide a hang (inner timeout is 15m).
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: python demo.py --headless
+      - run: timeout --signal=TERM --kill-after=30s 15m python demo.py --headless
+      - name: Reap leftover demo processes
+        if: always()
+        run: bash scripts/reap-ci-leftovers.sh
   tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -39,6 +85,9 @@ jobs:
           DISPLAY: ":99.0"
           GROUP: ${{ matrix.group }}
           SPLITS: 7
+      - name: Reap leftover test processes
+        if: always()
+        run: bash scripts/reap-ci-leftovers.sh
       - name: Test failure summary
         if: always()
         continue-on-error: true

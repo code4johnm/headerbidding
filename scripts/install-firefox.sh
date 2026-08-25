@@ -28,9 +28,15 @@ Linux)
   ;;
 esac
 
+if [ -x firefox-bin/firefox ]; then
+  echo "firefox-bin already present; skipping download"
+  firefox-bin/firefox --version || true
+  exit 0
+fi
+
 UNBRANDED_RELEASE_BUILD="https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-release.revision.${TAG}.firefox.${OS}64-add-on-devel/artifacts/public/build/target${TARGET_SUFFIX}"
 echo "Downloading Firefox from: $UNBRANDED_RELEASE_BUILD"
-if ! wget -q --show-progress -O "target${TARGET_SUFFIX}" "$UNBRANDED_RELEASE_BUILD"; then
+if ! wget -q --show-progress --timeout=30 --tries=3 --waitretry=5 -O "target${TARGET_SUFFIX}" "$UNBRANDED_RELEASE_BUILD"; then
   echo "Error: Failed to download Firefox. Check your network connection."
   echo "If your connection is fine, the Firefox version may be too old and no longer available on TaskCluster."
   echo "See https://github.com/openwpm/OpenWPM/issues/964 for more details."

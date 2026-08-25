@@ -1,9 +1,9 @@
-from __future__ import annotations
-
 import logging
 import os
 import time
 from pprint import pprint as pp
+
+from __future__ import annotations
 
 
 class HBLogger:
@@ -36,7 +36,6 @@ class HBLogger:
         logger.log(logLevel, msg)
         if self.print_output:
             print(fmt)
-
 
 
 # a = HBLogger('test')

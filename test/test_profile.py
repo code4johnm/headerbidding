@@ -17,6 +17,10 @@ from openwpm.utilities import db_utils
 from . import openwpmtest
 from .utilities import BASE_TEST_URL
 
+# Seed fixture lives next to this module. *.gz is gitignored; keep
+# !test/profile.tar.gz so CI can load it.
+SEED_PROFILE = Path(__file__).resolve().parent / "profile.tar.gz"
+
 # TODO update these tests to make use of blocking commands
 
 
@@ -115,7 +119,7 @@ def test_profile_saved_when_launch_crashes(
 
 def test_seed_persistence(default_params, task_manager_creator):
     manager_params, browser_params = default_params
-    p = Path("profile.tar.gz")
+    p = SEED_PROFILE
     for browser_param in browser_params:
         browser_param.seed_tar = p
     manager, db = task_manager_creator(default_params)
@@ -182,7 +186,7 @@ def test_dump_profile_command(default_params, task_manager_creator):
 
 def test_load_tar_file(tmp_path):
     """Test that load_profile does not delete or modify the tar file."""
-    tar_path = Path("profile.tar.gz")
+    tar_path = SEED_PROFILE
     profile_path = tmp_path / "browser_profile"
     browser_params = BrowserParamsInternal(browser_id=1)
     modified_time_before_load = tar_path.stat().st_mtime
@@ -207,7 +211,7 @@ def test_crash_during_init(default_params, task_manager_creator):
 
 @pytest.mark.parametrize(
     "stateful,seed_tar",
-    [(True, None), (True, Path("profile.tar.gz")), (False, Path("profile.tar.gz"))],
+    [(True, None), (True, SEED_PROFILE), (False, SEED_PROFILE)],
     ids=[
         "stateful-without_seed_tar",
         "stateful-with_seed_tar",

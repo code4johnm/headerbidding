@@ -19,29 +19,46 @@ runs:
         path: ${{ env.CONDA_PATH }}
         key: ${{ env.cache-name }}-${{ hashFiles('environment.yaml') }}
 
+    - id: firefox-cache
+      uses: actions/cache@v4
+      with:
+        path: firefox-bin
+        key: firefox-bin-${{ runner.os }}-${{ hashFiles('scripts/install-firefox.sh') }}
+
     # Invoke via bash so a missing git execute bit cannot produce exit 126.
+    # Bound each install so a stalled wget/conda cannot sit until the job cancel.
     - name: Install conda
       shell: bash
       if: ${{ steps.cache.outputs.cache-hit != 'true' }}
-      run: bash "$GITHUB_WORKSPACE/scripts/install-conda.sh"
+      run: timeout --signal=TERM --kill-after=30s 8m bash "$GITHUB_WORKSPACE/scripts/install-conda.sh"
 
     - shell: bash
       run: echo "$CONDA_PATH/bin" >> $GITHUB_PATH
+
+    - name: Install Xvfb (bounded)
+      shell: bash
+      run: |
+        if command -v Xvfb >/dev/null 2>&1; then
+          echo "Xvfb already on PATH"
+        else
+          timeout --signal=TERM --kill-after=15s 3m sudo apt-get update -qq
+          timeout --signal=TERM --kill-after=15s 3m sudo apt-get install -y -qq xvfb
+        fi
 
     - name: Install modern OpenWPM environment (cache miss)
       shell: bash
       if: ${{ steps.cache.outputs.cache-hit != 'true' }}
       run: |
         source "$CONDA_PATH/etc/profile.d/conda.sh"
-        conda env create -f "$GITHUB_WORKSPACE/environment.yaml" -n openwpm
+        timeout --signal=TERM --kill-after=30s 15m conda env create -f "$GITHUB_WORKSPACE/environment.yaml" -n openwpm
         conda activate openwpm
-        bash "$GITHUB_WORKSPACE/scripts/install-firefox.sh"
+        timeout --signal=TERM --kill-after=30s 5m bash "$GITHUB_WORKSPACE/scripts/install-firefox.sh"
     - name: Reuse cached environment (cache hit)
       shell: bash
       if: ${{ steps.cache.outputs.cache-hit == 'true' }}
       run: |
         echo "Using cached conda environment"
-        bash "$GITHUB_WORKSPACE/scripts/install-firefox.sh" || echo "Firefox already present or will be provided by cache"
+        timeout --signal=TERM --kill-after=30s 5m bash "$GITHUB_WORKSPACE/scripts/install-firefox.sh"
     - shell: bash
       run: echo "$OPENWPM_CONDA_PATH/bin" >> $GITHUB_PATH
     # Now we have a working OpenWPM environment (modern stack: Python 3.12+, recent Firefox + geckodriver)
