@@ -1,4 +1,6 @@
 import argparse
+import atexit
+import subprocess
 from pathlib import Path
 from typing import Literal
 
@@ -6,6 +8,12 @@ from openwpm.command_sequence import CommandSequence
 from openwpm.config import BrowserParams, ManagerParams
 from openwpm.storage.sql_provider import SQLiteStorageProvider
 from openwpm.task_manager import TaskManager
+
+
+def _reap_leftover_ci_processes() -> None:
+    script = Path(__file__).resolve().parent / "scripts" / "reap-ci-leftovers.sh"
+    if script.is_file():
+        subprocess.call(["bash", str(script)])
 
 # The list of sites that we wish to crawl
 NUM_BROWSERS = 3
@@ -17,6 +25,7 @@ sites = [
 
 
 def main() -> None:
+    atexit.register(_reap_leftover_ci_processes)
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--headless",

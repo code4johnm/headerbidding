@@ -22,6 +22,20 @@ EXTENSION_DIR = os.path.join(
 pytest_plugins = "test.storage.fixtures"
 
 
+def _reap_leftover_ci_processes() -> None:
+    """Reap leftover browsers/display/node children after the test session."""
+    script = Path(__file__).resolve().parents[1] / "scripts" / "reap-ci-leftovers.sh"
+    if script.is_file():
+        subprocess.call(["bash", str(script)])
+
+
+@pytest.fixture(scope="session", autouse=True)
+def reap_leftover_processes_after_session() -> Generator[None, None, None]:
+    """Session teardown: reap leftovers on pass and fail (not on SIGKILL)."""
+    yield
+    _reap_leftover_ci_processes()
+
+
 @pytest.fixture(scope="session", autouse=True)
 def enable_subprocess_coverage():
     """Enable coverage collection in child processes when running under coverage."""
