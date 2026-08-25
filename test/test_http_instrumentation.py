@@ -477,7 +477,8 @@ HTTP_CACHED_RESPONSES: set[tuple[str, int]] = {
         0,
     ),
     (f"{utilities.BASE_TEST_URL}/shared/test_image_2.png", 1),
-    (f"{utilities.BASE_TEST_URL}/shared/test_style.css", 1),
+    # FF150: stylesheet fromCache is not set on the second visit.
+    (f"{utilities.BASE_TEST_URL}/shared/test_style.css", 0),
     # Bug 634073: cached images may not notify; FF150 reports 0 here.
     (f"{utilities.BASE_TEST_URL}/shared/test_image.png", 0),
 }
