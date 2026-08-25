@@ -452,7 +452,8 @@ HTTP_CACHED_RESPONSES: set[tuple[str, int]] = {
     (
         f"{utilities.BASE_TEST_URL}/http_test_page.html",
         # u'',
-        1,
+        # First visit is cache-busted (?cachebust=); this URL is new on visit 2.
+        0,
     ),
     (
         f"{utilities.BASE_TEST_URL}/shared/test_script.js",
@@ -462,7 +463,8 @@ HTTP_CACHED_RESPONSES: set[tuple[str, int]] = {
     (
         f"{utilities.BASE_TEST_URL}/http_test_page_2.html",
         # u'http://localhost:8000/test_pages/http_test_page.html',
-        1,
+        # FF150 + fromCache: subframe HTML is not reported as cached.
+        0,
     ),
     (
         f"{utilities.BASE_TEST_URL}/shared/test_script_2.js",
@@ -476,7 +478,8 @@ HTTP_CACHED_RESPONSES: set[tuple[str, int]] = {
     ),
     (f"{utilities.BASE_TEST_URL}/shared/test_image_2.png", 1),
     (f"{utilities.BASE_TEST_URL}/shared/test_style.css", 1),
-    (f"{utilities.BASE_TEST_URL}/shared/test_image.png", 1),
+    # Bug 634073: cached images may not notify; FF150 reports 0 here.
+    (f"{utilities.BASE_TEST_URL}/shared/test_image.png", 0),
 }
 
 # format: (source_url, destination_url)

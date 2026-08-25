@@ -95,6 +95,7 @@ node_modules
 *.7z
 *.dmg
 *.gz
+!test/profile.tar.gz
 *.iso
 *.jar
 *.rar
