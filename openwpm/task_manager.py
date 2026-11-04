@@ -1,28 +1,30 @@
 import logging
 import os
-import pickle
 import threading
 import time
+import uuid
 from functools import reduce
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Set, Type
 
 import psutil
-import tblib
 
 from openwpm.config import (
     BrowserParams,
     BrowserParamsInternal,
     ManagerParams,
     ManagerParamsInternal,
+    host_allowed,
     validate_crawl_configs,
 )
 
 from .browser_manager import BrowserManagerHandle
 from .command_sequence import CommandSequence
 from .errors import CommandExecutionError
+from .ipc_exceptions import load_exception
 from .js_instrumentation import clean_js_instrumentation_settings
 from .mp_logger import MPLogger
+from .security_log import emit as security_emit
 from .storage.storage_controller import DataSocket, StorageControllerHandle
 from .storage.storage_providers import (
     StructuredStorageProvider,
@@ -31,8 +33,6 @@ from .storage.storage_providers import (
 from .utilities.multiprocess_utils import kill_process_and_children
 from .utilities.platform_utils import get_configuration_string, get_version
 from .utilities.storage_watchdog import StorageLogger
-
-tblib.pickling_support.install()
 
 SLEEP_CONS = 0.1  # command sleep constant (in seconds)
 BROWSER_MEMORY_LIMIT = 1500  # in MB
@@ -90,6 +90,18 @@ class TaskManager:
             os.makedirs(manager_params.screenshot_path)
         if not os.path.exists(manager_params.source_dump_path):
             os.makedirs(manager_params.source_dump_path)
+
+        self.correlation_id = str(uuid.uuid4())
+        self.audit_log_path = str(self.manager_params.data_directory / "security-audit.jsonl")
+        security_emit(
+            "crawl_configured",
+            self.correlation_id,
+            self.audit_log_path,
+            num_browsers=manager_params.num_browsers,
+            allowed_domains=",".join(manager_params.allowed_domains or []),
+            redact_identifiers=bool(manager_params.redact_identifiers),
+            data_directory=str(manager_params.data_directory),
+        )
 
         self.num_browsers = manager_params.num_browsers
 
@@ -190,6 +202,12 @@ class TaskManager:
             browsers.append(
                 BrowserManagerHandle(self.manager_params, browser_params[i])
             )
+            security_emit(
+                "profile_created",
+                self.correlation_id,
+                self.audit_log_path,
+                browser_id=int(browser_params[i].browser_id or 0),
+            )
 
         return browsers
 
@@ -209,6 +227,12 @@ class TaskManager:
                 )
                 self.close()
                 break
+            security_emit(
+                "browser_launched",
+                self.correlation_id,
+                self.audit_log_path,
+                browser_id=int(browser.browser_id or 0),
+            )
 
     def _manager_watchdog(self) -> None:
         """
@@ -285,6 +309,16 @@ class TaskManager:
         self.storage_controller_handle = StorageControllerHandle(
             structured_storage_provider, unstructured_storage_provider
         )
+        controller = self.storage_controller_handle.storage_controller
+        caps = [
+            int(params.save_content_max_bytes)
+            for params in self.browser_params
+            if params.save_content
+        ]
+        controller.redact_identifiers = bool(self.manager_params.redact_identifiers)
+        controller.content_max_bytes = min(caps) if caps else 0
+        controller.audit_log_path = self.audit_log_path
+        controller.correlation_id = self.correlation_id
         self.storage_controller_handle.launch()
         self.manager_params.storage_controller_address = (
             self.storage_controller_handle.listener_address
@@ -358,8 +392,8 @@ class TaskManager:
                 self.failure_status["CommandSequence"],
             )
         if self.failure_status["ErrorType"] == "CriticalChildException":
-            _, exc, tb = pickle.loads(self.failure_status["Exception"])
-            raise exc.with_traceback(tb)
+            exc, _tb_text = load_exception(self.failure_status["Exception"])
+            raise exc
 
     # CRAWLER COMMAND CODE
 
@@ -416,6 +450,20 @@ class TaskManager:
         None  -> first come, first serve
         int  -> index of browser to send command to
         """
+
+        url = command_sequence.url or ""
+        if not host_allowed(url, self.manager_params.allowed_domains):
+            raise CommandExecutionError(
+                "Visit URL is outside allowed_domains.",
+                command_sequence,
+            )
+        security_emit(
+            "command_sequence",
+            self.correlation_id,
+            self.audit_log_path,
+            url=url,
+            browser_index=-1 if index is None else index,
+        )
 
         # Block if the storage controller has too many unfinished records
         agg_queue_size = self.storage_controller_handle.get_most_recent_status()

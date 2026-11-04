@@ -65,7 +65,8 @@ def default_params(tmp_path: Path, num_browsers: int = NUM_BROWSERS):
     from openwpm.config import BrowserParams, ManagerParams
 
     manager_params = ManagerParams(
-        num_browsers=num_browsers
+        num_browsers=num_browsers,
+        allowed_domains=["localhost", "127.0.0.1", "invalid"],
     )  # num_browsers is necessary to let TaskManager know how many browsers to spawn
 
     browser_params = [

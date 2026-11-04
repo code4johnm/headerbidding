@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import hashlib
 import logging
 import queue
 import random
@@ -15,6 +16,8 @@ from multiprocess import Queue
 from openwpm.utilities.multiprocess_utils import Process
 
 from ..config import BrowserParamsInternal, ManagerParamsInternal
+from ..redact import redact_bytes, redact_record
+from ..security_log import emit as security_emit
 from ..socket_interface import ClientSocket, get_message_from_reader
 from ..types import BrowserId, VisitId
 from .storage_providers import (
@@ -83,6 +86,13 @@ class StorageController:
         self.structured_storage = structured_storage
         self.unstructured_storage = unstructured_storage
         self._last_record_received: Optional[float] = None
+        self.redact_identifiers = False
+        self.content_max_bytes = 0
+        self.audit_log_path = ""
+        self.correlation_id = ""
+
+    def _audit(self, event: str, **fields: Any) -> None:
+        security_emit(event, self.correlation_id, self.audit_log_path, **fields)
 
     async def _handler(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
@@ -106,6 +116,10 @@ class StorageController:
         """Created for every new connection to the Server"""
         client_name = await get_message_from_reader(reader)
         self.logger.info(f"Initializing new handler for {client_name}")
+        self._audit(
+            "extension_socket_connected",
+            client=str(client_name)[:128],
+        )
         while True:
             try:
                 record: Tuple[str, Any] = await get_message_from_reader(reader)
@@ -135,8 +149,30 @@ class StorageController:
                     continue
                 content, content_hash = data
                 content = base64.b64decode(content)
+                if self.redact_identifiers:
+                    content = redact_bytes(content)
+                if self.content_max_bytes > 0 and len(content) > self.content_max_bytes:
+                    self.logger.error(
+                        "Dropped content over the configured byte cap (%s > %s)",
+                        len(content),
+                        self.content_max_bytes,
+                    )
+                    self._audit(
+                        "storage_write",
+                        kind="content",
+                        size=len(content),
+                        outcome="rejected",
+                    )
+                    continue
                 await self.unstructured_storage.store_blob(
                     filename=content_hash, blob=content
+                )
+                self._audit(
+                    "storage_write",
+                    kind="content",
+                    size=len(content),
+                    sha256=hashlib.sha256(content).hexdigest(),
+                    outcome="stored",
                 )
                 continue
 
@@ -158,6 +194,15 @@ class StorageController:
     async def store_record(
         self, table_name: TableName, visit_id: VisitId, data: Dict[str, Any]
     ) -> None:
+        if self.redact_identifiers and isinstance(data, dict):
+            data = redact_record(data)
+        self._audit(
+            "storage_write",
+            kind="record",
+            table=str(table_name),
+            visit_id=int(visit_id),
+            outcome="stored",
+        )
         if visit_id == INVALID_VISIT_ID:
             # Hacking around the fact that task and crawl don't have a VisitID
             del data["visit_id"]

@@ -4,8 +4,15 @@ import json
 import logging
 import os
 import random
+import sys
 import time
+from pathlib import Path
 # from browsermobproxy import Server
+
+_SRC = str(Path(__file__).resolve().parents[1])
+if _SRC not in sys.path:
+    sys.path.insert(0, _SRC)
+import coord
 
 
 def load_json_object(path, default):
@@ -99,27 +106,31 @@ class ScriptUtils:
             msg = '[SCRIPT UTILS] No pbjs bids returned'
             print(msg)
             output.append(msg)
-            no_bids = load_json_object('no_bid_sites.json', {})
-            entry = no_bids.get(site) if isinstance(no_bids.get(site), dict) else {}
-            info = entry.get('crawl_info') if isinstance(entry.get('crawl_info'), list) else []
-            info.append({'site': site, 'visit': visit})
-            no_bids[site] = {'count': int(entry.get('count') or 0) + 1, 'crawl_info': info}
-            dump_json_object('no_bid_sites.json', no_bids)
-        site_name = site.split('://')[1] if '://' in site else site
+            def _record_no_bid(no_bids):
+                entry = no_bids.get(site) if isinstance(no_bids.get(site), dict) else {}
+                info = entry.get('crawl_info') if isinstance(entry.get('crawl_info'), list) else []
+                info.append({'site': site, 'visit': visit})
+                no_bids[site] = {'count': int(entry.get('count') or 0) + 1, 'crawl_info': info}
+
+            coord.update_json('no_bid_sites.json', {}, _record_no_bid)
+        site_name = coord.site_slug(site)
         if crawl_type == "NO_INTENT":
             destination = os.path.join('./results/bids_no_intent/', site_name + "_{}.json".format(iab))
         else:
             destination = os.path.join('./results/bids_intent/', site_name + "_{}.json".format(iab))
-        data = load_json_object(destination, {})
-        for item in output:
-            slot = data.setdefault(iab, {}).setdefault(domain, {})
-            slot.setdefault(visit, []).append(item)
+
+        def _append_bids(data):
+            for item in output:
+                slot = data.setdefault(iab, {}).setdefault(domain, {})
+                slot.setdefault(visit, []).append(item)
+
         print('[SCRIPT UTILS] {} writing to {}'.format(iab, destination))
-        dump_json_object(destination, data)
-        done = load_json_object('testingDone.json', {})
-        done[iab] = 1
-        dump_json_object('testingDone.json', done)
-        dump_json_object('writing.json', {'writing': ""})
+        coord.update_json(destination, {}, _append_bids)
+
+        def _mark_done(done):
+            done[iab] = 1
+
+        coord.update_json('testingDone.json', {}, _mark_done)
         print('[SCRIPT UTILS] {} finished. '.format(iab))
         return destination
 
@@ -129,12 +140,12 @@ class ScriptUtils:
     def pbjsVersion(self, **kwargs): 
         driver = kwargs['driver']
         version = driver.execute_script(self.PBJS_VERSION)
-        data = []
         domain = driver.current_url
-        
-        data = load_json_object('./results/pbjs_sites_full.json', {})
-        data.update({domain: version})
-        dump_json_object('./results/pbjs_sites_full.json', data)
+
+        def _store_version(data):
+            data[domain] = version
+
+        coord.update_json('./results/pbjs_sites_full.json', {}, _store_version)
        
         try:
             with open('pbjsDone.txt', 'w') as f: 
@@ -143,10 +154,11 @@ class ScriptUtils:
             pass
 
     def signalDone(self, iab, **kwargs):
-        data = load_json_object('trainingDone.json', {})
-        data.update({iab: 1})
+        def _mark(data):
+            data[iab] = 1
+
+        data = coord.update_json('trainingDone.json', {}, _mark)
         print(data)
-        dump_json_object('trainingDone.json', data)
 
 
     # def write_out_har(self, url, timestamp, category, intent, ml_type, **kwargs):

@@ -1,39 +1,20 @@
-#=============================================================
-# Dockerfile for OpenWPM
-# See README.md for build & use instructions
-#=============================================================
+# Development image. The runtime user has no passwordless sudo.
+# Requires a locally built image tagged openwpm from the Dockerfile.
 
 FROM openwpm
 
-#=============================================================
-# Copy OpenWPM tests
-#=============================================================
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /opt/firefox \
+    && if [ -d /opt/OpenWPM/firefox-bin ]; then mv /opt/OpenWPM/firefox-bin /opt/firefox/firefox-bin; fi \
+    && chown -R user:user /opt/OpenWPM /opt/firefox
 
-ADD test /opt/OpenWPM/test/
-ADD install-dev.sh /opt/OpenWPM/
-ADD requirements-dev.txt /opt/OpenWPM/
+COPY --chown=user:user test /opt/OpenWPM/test/
+COPY --chown=user:user install-dev.sh requirements-dev.txt /opt/OpenWPM/
 
-#=============================================================
-# Install requirements for OpenWPM development
-#=============================================================
-
-RUN cd /opt/OpenWPM/ \
-     && ./install-dev.sh
-
-#=============================================================
-# Move away Firefox from the root of the source code dir
-# (so that we can mount our local source code dir without
-# overshadowing the firefox installation)
-#=============================================================
-
-RUN sudo mkdir /opt/firefox/ && \
-    sudo mv /opt/OpenWPM/firefox-bin /opt/firefox/firefox-bin
 ENV FIREFOX_BINARY=/opt/firefox/firefox-bin/firefox-bin
-
-#=============================================================
-# Make the shell within the Docker environment more useful
-#=============================================================
-
-RUN sudo apt-get -yq install nano
-
+USER user
 WORKDIR /opt/OpenWPM
+RUN ./install-dev.sh

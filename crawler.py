@@ -44,7 +44,7 @@ HTTP_INSTRUMENT = os.getenv("HTTP_INSTRUMENT", "1") == "1"
 COOKIE_INSTRUMENT = os.getenv("COOKIE_INSTRUMENT", "1") == "1"
 NAVIGATION_INSTRUMENT = os.getenv("NAVIGATION_INSTRUMENT", "1") == "1"
 JS_INSTRUMENT = os.getenv("JS_INSTRUMENT", "1") == "1"
-CALLSTACK_INSTRUMENT = os.getenv("CALLSTACK_INSTRUMENT", "1") == "1"
+CALLSTACK_INSTRUMENT = os.getenv("CALLSTACK_INSTRUMENT", "0") == "1"
 JS_INSTRUMENT_SETTINGS = json.loads(
     os.getenv("JS_INSTRUMENT_SETTINGS", '["collection_fingerprinting"]')
 )
@@ -79,18 +79,41 @@ for i in range(NUM_BROWSERS):
     browser_params[i].callstack_instrument = CALLSTACK_INSTRUMENT
     browser_params[i].js_instrument = JS_INSTRUMENT
     browser_params[i].js_instrument_settings = JS_INSTRUMENT_SETTINGS
-    if SAVE_CONTENT == "1":
-        browser_params[i].save_content = True
-    elif SAVE_CONTENT == "0":
+    if SAVE_CONTENT in ("", "0", "false", "False"):
         browser_params[i].save_content = False
+    elif SAVE_CONTENT == "1" or SAVE_CONTENT.lower() == "true":
+        raise SystemExit(
+            "SAVE_CONTENT=1 is rejected. Set SAVE_CONTENT to a comma-separated "
+            "resource type list plus SAVE_CONTENT_JUSTIFICATION and "
+            "SAVE_CONTENT_MAX_BYTES."
+        )
     else:
+        try:
+            content_cap = int(os.getenv("SAVE_CONTENT_MAX_BYTES", "0"))
+        except ValueError:
+            raise SystemExit("SAVE_CONTENT_MAX_BYTES must be an integer.")
         browser_params[i].save_content = SAVE_CONTENT
+        browser_params[i].save_content_justification = os.getenv(
+            "SAVE_CONTENT_JUSTIFICATION", ""
+        )
+        browser_params[i].save_content_max_bytes = content_cap
     if PREFS:
         browser_params[i].prefs = json.loads(PREFS)
 
 # Manager configuration
-manager_params.data_directory = Path("~/Desktop/") / CRAWL_DIRECTORY
-manager_params.log_path = Path("~/Desktop/") / CRAWL_DIRECTORY / "openwpm.log"
+raw_domains = os.getenv("OPENWPM_ALLOWED_DOMAINS", "").strip()
+if not raw_domains:
+    raise SystemExit(
+        "OPENWPM_ALLOWED_DOMAINS is required (comma-separated hostnames)."
+    )
+manager_params.allowed_domains = [
+    part.strip() for part in raw_domains.split(",") if part.strip()
+]
+# Redaction is on for this entry point. Set REDACT_IDENTIFIERS=0 to store raw bodies.
+manager_params.redact_identifiers = os.getenv("REDACT_IDENTIFIERS", "1") != "0"
+data_root = Path(CRAWL_DIRECTORY).expanduser()
+manager_params.data_directory = data_root
+manager_params.log_path = data_root / "openwpm.log"
 
 structured = GcsStructuredProvider(
     project=GCP_PROJECT,

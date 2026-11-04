@@ -1,0 +1,116 @@
+{
+  "components": [
+    {
+      "bom-ref": "BomRef.6555714344712208.19129313755645705",
+      "name": "dataclasses-json",
+      "type": "library",
+      "version": "0.6.7"
+    },
+    {
+      "bom-ref": "BomRef.27573023476976377.3418799797019576",
+      "name": "iniconfig",
+      "type": "library",
+      "version": "2.3.1"
+    },
+    {
+      "bom-ref": "BomRef.8298104029337734.22440495145900774",
+      "name": "marshmallow",
+      "type": "library",
+      "version": "3.26.2"
+    },
+    {
+      "bom-ref": "BomRef.32341680698950925.09030992339456478",
+      "name": "mypy-extensions",
+      "type": "library",
+      "version": "1.2.0"
+    },
+    {
+      "bom-ref": "BomRef.46601098687278053.8208548585931364",
+      "name": "packaging",
+      "type": "library",
+      "version": "26.3"
+    },
+    {
+      "bom-ref": "BomRef.8245449573876146.7508247455900747",
+      "name": "pluggy",
+      "type": "library",
+      "version": "1.7.0"
+    },
+    {
+      "bom-ref": "BomRef.4443217934369017.37173157120853617",
+      "name": "pygments",
+      "type": "library",
+      "version": "2.21.0"
+    },
+    {
+      "bom-ref": "BomRef.9323363503852454.7886180520962927",
+      "name": "pytest",
+      "type": "library",
+      "version": "9.1.1"
+    },
+    {
+      "bom-ref": "BomRef.6770455060549595.911595230475791",
+      "name": "typing-extensions",
+      "type": "library",
+      "version": "4.16.0"
+    },
+    {
+      "bom-ref": "BomRef.4851503045506489.15198615318513953",
+      "name": "typing-inspect",
+      "type": "library",
+      "version": "0.9.0"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "BomRef.6555714344712208.19129313755645705"
+    },
+    {
+      "ref": "BomRef.27573023476976377.3418799797019576"
+    },
+    {
+      "ref": "BomRef.8298104029337734.22440495145900774"
+    },
+    {
+      "ref": "BomRef.32341680698950925.09030992339456478"
+    },
+    {
+      "ref": "BomRef.46601098687278053.8208548585931364"
+    },
+    {
+      "ref": "BomRef.8245449573876146.7508247455900747"
+    },
+    {
+      "ref": "BomRef.4443217934369017.37173157120853617"
+    },
+    {
+      "ref": "BomRef.9323363503852454.7886180520962927"
+    },
+    {
+      "ref": "BomRef.6770455060549595.911595230475791"
+    },
+    {
+      "ref": "BomRef.4851503045506489.15198615318513953"
+    }
+  ],
+  "metadata": {
+    "timestamp": "2026-11-04T18:25:08.388160+00:00",
+    "component": {
+      "type": "application",
+      "name": "headerbidding-control-plane",
+      "version": "1.4.0-hb",
+      "description": "CycloneDX for requirements-hardening.txt only. environment.yaml, conda, Firefox, and Extension/package-lock.json are not included."
+    },
+    "properties": [
+      {
+        "name": "scope",
+        "value": "Hashed PyPI pins audited by pip-audit in the auction job. Not an ATO and not a conda SBOM."
+      }
+    ]
+  },
+  "serialNumber": "urn:uuid:d6207aa5-7b73-4156-b0c9-654e87faf789",
+  "version": 1,
+  "$schema": "http://cyclonedx.org/schema/bom-1.4.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.4"
+}

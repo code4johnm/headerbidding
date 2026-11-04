@@ -427,7 +427,7 @@ def test_audio_fingerprinting(default_params, task_manager_creator):
         browser_params.js_instrument = True
 
     tm, db = task_manager_creator(default_params)
-    cs = CommandSequence("/audio_fingerprinting.html")
+    cs = CommandSequence(utilities.BASE_TEST_URL + "/audio_fingerprinting.html")
     cs.append_command(
         GetCommand(utilities.BASE_TEST_URL + "/audio_fingerprinting.html", 0)
     )

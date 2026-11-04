@@ -2,22 +2,20 @@
 set -e
 
 # =====================================================================
-# headerbidding / OpenWPM Installation Script (Legacy Entry Point)
+# DEPRECATED legacy entry point.
 #
-# This script is kept for backward compatibility.
-#
-# RECOMMENDED MODERN INSTALLATION (2026+):
+# Supported installation:
 #
 #   conda env create -f environment.yaml
 #   conda activate openwpm
 #   ./scripts/install-firefox.sh
 #
-# For development tools, also run:
-#   ./install-dev.sh          # Linux
-#   ./install-mac-dev.sh      # macOS
-#
-# The commands below will still work but are less maintained.
+# This script only forwards to scripts/install-firefox.sh. It does not
+# create the conda environment. Do not use an automation/ layout or a
+# system Firefox package.
 # =====================================================================
+echo "DEPRECATED: install.sh is a legacy entry point." >&2
+echo "Use: conda env create -f environment.yaml && conda activate openwpm && ./scripts/install-firefox.sh" >&2
 
 if [[ $# -gt 1 ]]; then
     echo "Usage: install.sh [--no-flash]" >&2

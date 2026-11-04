@@ -3,11 +3,19 @@ from __future__ import annotations
 import json
 import os
 import random
+import sys
 import tempfile
 import time
+from pathlib import Path
+from subprocess import run
 from threading import Thread
 
 from HBLogger import HBLogger
+
+_SRC = str(Path(__file__).resolve().parents[3])
+if _SRC not in sys.path:
+    sys.path.insert(0, _SRC)
+import coord
 class MLTesting:
     def __init__(self):
         self.training_profiles = {}
@@ -22,7 +30,13 @@ class MLTesting:
 
 
     def archive(self, folder, dst, crawl_type):
-        os.system('tar -C {} -cvf /mnt/hgfs/archive_save/ml_testing/ready_for_analysis/{}_{}.tar training testing'.format(folder, dst,crawl_type))
+        ready = coord.archive_root() / "ml_testing" / "ready_for_analysis"
+        ready.mkdir(parents=True, exist_ok=True)
+        target = ready / "{}_{}.tar".format(coord.safe_name(str(dst)), coord.safe_name(str(crawl_type)))
+        run(
+            ["tar", "-C", str(folder), "-cvf", str(target), "training", "testing"],
+            check=False,
+        )
   
 
 
@@ -34,7 +48,7 @@ class MLTesting:
 
     
     def get_training_profile_list(self):
-        with open('/mnt/hgfs/archive_save/ml_testing/training_manifest.json') as f: 
+        with open(coord.training_manifest_path()) as f: 
             self.training_profiles = json.load(f)
     
     def monitor_thread(self):
@@ -161,7 +175,9 @@ class MLTesting:
             return 'fail'
 
         file_name = profile['storage_location'].split('/')[-1].split('.tar')[0].replace('_TRAINING','')
-        finalized_path =  os.path.join('/mnt/hgfs/archive_save/ml_testing', 'ready_for_analysis', file_name)
+        ready = coord.archive_root() / "ml_testing" / "ready_for_analysis"
+        file_name = coord.safe_name(file_name)
+        finalized_path = os.path.join(str(ready), file_name)
         #/mnt/hgfs/archive_save/ml_testing/ready_for_analysis/timestamp_<INTENT/NO_INTENT>/testing
         testingPath = os.path.join(finalized_path, 'testing') 
         if not os.path.exists(finalized_path): 

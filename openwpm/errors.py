@@ -40,3 +40,15 @@ class BrowserCrashError(Exception):
     def __init__(self, message, *args):
         self.message = message
         super(BrowserCrashError, self).__init__(message, *args)
+
+
+class ResearchInstrumentError(Exception):
+    """Fallback when an exception cannot be rebuilt from the status queue.
+
+    The original type name is included in the message. The class is never
+    constructed by evaluating a payload.
+    """
+
+    def __init__(self, message, *args):
+        self.message = message
+        super(ResearchInstrumentError, self).__init__(message, *args)

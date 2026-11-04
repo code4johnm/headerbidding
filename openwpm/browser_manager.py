@@ -2,7 +2,6 @@ import errno
 import json
 import logging
 import os
-import pickle
 import shutil
 import signal
 import sys
@@ -17,7 +16,6 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Type, Union
 import psutil
 from multiprocess import Queue
 from selenium.common.exceptions import WebDriverException
-from tblib import Traceback, pickling_support
 
 from .command_sequence import CommandSequence
 from .commands.browser_commands import FinalizeCommand
@@ -27,6 +25,7 @@ from .commands.utils.webdriver_utils import parse_neterror
 from .config import BrowserParamsInternal, ManagerParamsInternal
 from .deploy_browsers import deploy_firefox
 from .errors import BrowserConfigError, BrowserCrashError, ProfileLoadError
+from .ipc_exceptions import dump_exception, load_exception
 from .socket_interface import ClientSocket
 from .storage.storage_providers import TableName
 from .types import BrowserId, VisitId
@@ -36,8 +35,6 @@ from .utilities.multiprocess_utils import (
     parse_traceback_for_sentry,
 )
 from .utilities.storage_watchdog import profile_size_exceeds_max_size
-
-pickling_support.install()
 
 if TYPE_CHECKING:
     from .task_manager import TaskManager
@@ -161,8 +158,8 @@ class BrowserManagerHandle:
                 launch_status[result[1]] = True
                 return result[2]
             elif result[0] == "CRITICAL":
-                _, exc, tb = pickle.loads(result[1])
-                raise exc.with_traceback(tb)
+                exc, _tb_text = load_exception(result[1])
+                raise exc
             elif result[0] == "FAILED":
                 raise BrowserCrashError("Browser spawn returned failure status")
 
@@ -432,17 +429,17 @@ class BrowserManagerHandle:
                     "CommandSequence": command_sequence,
                     "Exception": status[1],
                 }
-                error_text, tb = self._unpack_pickled_error(status[1])
+                error_text, tb = self._unpack_reported_error(status[1])
             elif status[0] == "FAILED":
                 command_status = "error"
-                error_text, tb = self._unpack_pickled_error(status[1])
+                error_text, tb = self._unpack_reported_error(status[1])
                 self.logger.info(
                     "BROWSER %i: Received failure status while executing "
                     "command: %s" % (self.browser_id, repr(command))
                 )
             elif status[0] == "NETERROR":
                 command_status = "neterror"
-                error_text, tb = self._unpack_pickled_error(status[1])
+                error_text, tb = self._unpack_reported_error(status[1])
                 error_text = parse_neterror(error_text)
                 self.logger.info(
                     "BROWSER %i: Received neterror %s while executing "
@@ -546,12 +543,10 @@ class BrowserManagerHandle:
                 return
             self.restart_required = False
 
-    def _unpack_pickled_error(self, pickled_error: bytes) -> Tuple[str, str]:
-        """Unpacks `pickled_error` into an error `message` and `tb` string."""
-        exc = pickle.loads(pickled_error)
-        message = traceback.format_exception(*exc)[-1]
-        tb = json.dumps(Traceback(exc[2]).to_dict())
-        return message, tb
+    def _unpack_reported_error(self, payload: bytes) -> Tuple[str, str]:
+        """Rebuild an allow-listed exception into a message and traceback text."""
+        exc, tb_text = load_exception(payload)
+        return str(exc), tb_text
 
     def kill_browser_manager(self):
         """Kill the BrowserManager process and all of its children"""
@@ -807,9 +802,7 @@ class BrowserManager(Process):
                     # browser, allowing us to run the SHUTDOWN command.
                     tb = traceback.format_exception(*sys.exc_info())
                     if "about:neterror" in tb[-1]:
-                        self.status_queue.put(
-                            ("NETERROR", pickle.dumps(sys.exc_info()))
-                        )
+                        self.status_queue.put(("NETERROR", dump_exception()))
                         continue
                     extra = parse_traceback_for_sentry(tb)
                     extra["exception"] = tb[-1]
@@ -819,14 +812,14 @@ class BrowserManager(Process):
                         exc_info=True,
                         extra=extra,
                     )
-                    self.status_queue.put(("FAILED", pickle.dumps(sys.exc_info())))
+                    self.status_queue.put(("FAILED", dump_exception()))
 
         except self.critical_exceptions as e:
             self.logger.error(
                 "BROWSER %i: %s thrown, informing parent and raising"
                 % (self.browser_params.browser_id, e.__class__.__name__)
             )
-            self.status_queue.put(("CRITICAL", pickle.dumps(sys.exc_info())))
+            self.status_queue.put(("CRITICAL", dump_exception()))
         except Exception:
             tb = traceback.format_exception(*sys.exc_info())
             extra = parse_traceback_for_sentry(tb)
@@ -837,7 +830,7 @@ class BrowserManager(Process):
                 exc_info=True,
                 extra=extra,
             )
-            self.status_queue.put(("FAILED", pickle.dumps(sys.exc_info())))
+            self.status_queue.put(("FAILED", dump_exception()))
         finally:
             if display is not None:
                 display.stop()

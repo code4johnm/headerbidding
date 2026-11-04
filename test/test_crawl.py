@@ -8,6 +8,7 @@ to debug.
 import json
 import os
 import tarfile
+from urllib.parse import urlparse
 
 import domain_utils as du
 import pytest
@@ -54,6 +55,9 @@ def test_browser_profile_coverage(default_params, task_manager_creator):
     manager_params, browser_params = default_params
     manager_params.num_browsers = 1
     manager_params.testing = False
+    manager_params.allowed_domains = sorted(
+        {urlparse(site).hostname for site in TEST_SITES if urlparse(site).hostname}
+    )
     browser_params[0].profile_archive_dir = (
         manager_params.data_directory / "browser_profile"
     )

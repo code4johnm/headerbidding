@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from json import JSONEncoder
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from urllib.parse import urlparse
 
 from dataclasses_json import DataClassJsonMixin
 from dataclasses_json import config as DCJConfig
@@ -85,6 +86,12 @@ class BrowserParams(DataClassJsonMixin):
     http_instrument: bool = False
     navigation_instrument: bool = False
     save_content: Union[bool, str] = False
+    save_content_justification: str = ""
+    """Required when save_content names resource types. At least 20 characters."""
+    save_content_max_bytes: int = 0
+    """Positive cap, at most 5000000, when save_content names resource types.
+    Zero leaves the storage cap unset. Content saving stays off unless a
+    resource-type list, a justification, and a cap are all set."""
     callstack_instrument: bool = False
     dns_instrument: bool = False
     seed_tar: Optional[Path] = field(
@@ -169,6 +176,17 @@ class ManagerParams(DataClassJsonMixin):
     testing: bool = False
     """A platform wide flag that can be used to only run certain functionality
     while testing. For example, the Javascript instrumentation"""
+    allowed_domains: Optional[List[str]] = None
+    """Hostnames this TaskManager may visit. Validation rejects a missing or
+    empty list. A host matches exactly or as a dot-boundary suffix
+    (``a.example.com`` matches ``example.com``; ``notexample.com`` does not).
+    Subresources and later ``webdriver.get`` calls inside a command are not
+    filtered."""
+    redact_identifiers: bool = False
+    """When true, redact emails, tokens, and long hex strings in selected
+    text fields and UTF-8 content bodies before storage. The library default
+    is false so existing content hashes stay stable. Hardened entry points
+    turn this on."""
     memory_watchdog: bool = False
     """A watchdog that tries to ensure that no Firefox instance takes up too much memory.
     It is mostly useful for long running cloud crawls"""
@@ -218,6 +236,85 @@ class ManagerParamsInternal(ManagerParams):
     )
 
 
+def host_allowed(url: str, allowed_domains: Optional[List[str]]) -> bool:
+    """Return True when ``url`` is http(s) and its host is on the list."""
+    if not allowed_domains:
+        return False
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or parsed.username or parsed.password:
+        return False
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if not host:
+        return False
+    for raw in allowed_domains:
+        if not isinstance(raw, str):
+            continue
+        domain = raw.strip().lower().rstrip(".")
+        if not domain or domain.startswith("."):
+            continue
+        if host == domain or host.endswith("." + domain):
+            return True
+    return False
+
+
+def _validate_allowed_domains(manager_params: ManagerParams) -> None:
+    domains = manager_params.allowed_domains
+    if not isinstance(domains, list) or len(domains) == 0:
+        raise ConfigError(
+            "ManagerParams.allowed_domains is required and must be a non-empty "
+            "list of hostnames. See docs/Configuration.md."
+        )
+    for domain in domains:
+        if (
+            not isinstance(domain, str)
+            or not domain.strip()
+            or any(ch in domain for ch in "/\\?# ")
+            or domain.strip().lower() in {"*", "all"}
+        ):
+            raise ConfigError(
+                "allowed_domains entries must be hostnames such as example.com, "
+                "not URLs or wildcards."
+            )
+
+
+def _validate_save_content(browser_params: BrowserParams) -> None:
+    save = browser_params.save_content
+    if save is False:
+        return
+    if save is True:
+        raise ConfigError(
+            "save_content=True is rejected. Pass an explicit comma-separated "
+            "resource type list, save_content_justification, and "
+            "save_content_max_bytes."
+        )
+    if not isinstance(save, str):
+        raise ConfigError(
+            GENERAL_ERROR_STRING.format(
+                value=save,
+                parameter_name="save_content",
+                params_type="BrowserParams",
+            )
+        )
+    configured_types = {part.strip() for part in save.split(",") if part.strip()}
+    if not configured_types.issubset(ALL_RESOURCE_TYPES):
+        diff = configured_types.difference(ALL_RESOURCE_TYPES)
+        raise ConfigError(
+            "Unrecognized resource types provided "
+            "in browser_params.save_content (%s)" % diff
+        )
+    justification = browser_params.save_content_justification
+    if not isinstance(justification, str) or len(justification.strip()) < 20:
+        raise ConfigError(
+            "save_content requires save_content_justification of at least "
+            "20 characters."
+        )
+    cap = browser_params.save_content_max_bytes
+    if isinstance(cap, bool) or not isinstance(cap, int) or cap < 1 or cap > 5000000:
+        raise ConfigError(
+            "save_content_max_bytes must be an integer from 1 to 5000000."
+        )
+
+
 def validate_browser_params(browser_params: BrowserParams) -> None:
     if BrowserParams() == browser_params:
         return
@@ -257,28 +354,11 @@ def validate_browser_params(browser_params: BrowserParams) -> None:
                 "Do not enable this flag."
             )
 
-        if not isinstance(browser_params.save_content, bool) and not isinstance(
-            browser_params.save_content, str
-        ):
-            raise ConfigError(
-                GENERAL_ERROR_STRING.format(
-                    value=browser_params.save_content,
-                    parameter_name="save_content",
-                    params_type="BrowserParams",
-                )
-            )
+        _validate_save_content(browser_params)
 
-        if browser_params.save_content:
-            if isinstance(browser_params.save_content, str):
-                configured_types = set(browser_params.save_content.split(","))
-                if not configured_types.issubset(ALL_RESOURCE_TYPES):
-                    diff = configured_types.difference(ALL_RESOURCE_TYPES)
-                    raise ConfigError(
-                        "Unrecognized resource types provided ",
-                        "in browser_params.save_content (%s)" % diff,
-                    )
-
-    except:
+    except ConfigError:
+        raise
+    except Exception:
         raise ConfigError(
             "Something went wrong while validating BrowserParams. "
             "Please check values provided for BrowserParams are of expected types"
@@ -286,7 +366,8 @@ def validate_browser_params(browser_params: BrowserParams) -> None:
 
 
 def validate_manager_params(manager_params: ManagerParams) -> None:
-    if ManagerParams() == manager_params:
+    _validate_allowed_domains(manager_params)
+    if ManagerParams(allowed_domains=manager_params.allowed_domains) == manager_params:
         return
 
     try:

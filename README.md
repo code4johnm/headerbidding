@@ -38,15 +38,28 @@ Before any execution:
 4. Enforce strict destination allow-lists, rate limiting, and crawl politeness policies. Never crawl production properties without explicit authorization.
 5. Apply the hardening controls documented in [docs/Security-Hardening.md](docs/Security-Hardening.md) before first use.
 
-**Known Critical Limitations**
+**Hardening status (2026-11-04)**
 
-- Legacy `TrackerProject/` layer contains absolute researcher-specific filesystem paths (e.g., `~/...`) and JSON-file mutex coordination with well-documented race conditions and data-loss risks.
-- Dockerfiles and some install scripts reference outdated directory layouts (`automation/`) and ancient browser stacks in certain configurations.
-- The privileged instrumentation extension (manifest v2, `unsafe-eval` CSP) runs with chrome-level privileges; a compromised extension or malicious site exploiting instrumentation hooks presents a realistic host-escalation vector.
-- No built-in authentication, authorization, or encryption-at-rest for telemetry. The platform assumes a fully trusted local execution context.
-- Pickle-based IPC for exception transport between browser manager processes (local only, but deserialization of untrusted data remains a latent risk if queues are externally influenced).
+Addressed in this tree, with tests:
 
-**Status**: Suitable only for controlled academic and internal research after substantial hardening and modernization. Not intended for operational, high-volume, or security-sensitive production measurement.
+- Live `TrackerProject/` paths use `HB_TRACKER_ROOT` (default `TrackerProject/var/`), `HB_ARCHIVE_DIR`, and `HB_TRAINING_MANIFEST`. Bid JSON updates take an exclusive `fcntl` lock. `writing.json` is not a lock. The layer is transitional. See `TrackerProject/README.md` and `CODEOWNERS`.
+- `Dockerfile` uses Ubuntu 24.04 with a pinned manifest-list digest, a non-root user, no passwordless sudo, and a pinned Miniforge release tag. `install.sh` is a deprecated forwarder to `scripts/install-firefox.sh`.
+- Exception IPC between browser-manager processes is JSON (`openwpm.exc.v1`) with an allow-list. Pickle payloads are rejected. Extension sockets accept only loopback targets. Profile filenames reject traversal. `pre_instrumentation_code` is not evaluated unless `allow_pre_instrumentation_eval` is true.
+- `ManagerParams.allowed_domains` is required. Visit URLs must be `http` or `https` and match that list. `save_content=True` is rejected. Saving content requires a resource-type list, a justification, and a size cap. Security events append to `security-audit.jsonl`. `scripts/protect-datadir.sh` fails closed when `age` is absent.
+- `requirements-hardening.txt` is hash-pinned. The `auction` job fails when `pip-audit` reports a known vulnerability in that file. `docs/sbom.cdx.json` is the CycloneDX document for those pins.
+
+Residual risk (this is not a certification and not a production system):
+
+- `unsafe-eval` remains because JavaScript instrumentation evaluates object paths. The extension is still Manifest V2 with `<all_urls>`. The pre-instrumentation gate applies after the extension bundle is rebuilt. Webpack was not run for that gate.
+- Storage records between Python processes still use dill. Subresource requests, and `webdriver.get` inside a command, are not filtered by `allowed_domains`.
+- `TrackerProject/` still contains commented absolute paths and live `os.system` calls outside the functions that were moved to `subprocess` argument lists.
+- `datadir/` is not encrypted unless the operator uses LUKS or `age`. Identifier redaction defaults off in the library so existing content hashes stay stable. `crawler.py` and `scripts/minimal-crawl.py` turn it on.
+- The conda environment in `environment.yaml` is outside the hashed audit. The container image was not built in this change. A full Firefox crawl was not run. `scripts/minimal-crawl.py --check` validates the hardened configuration without launching Firefox.
+- There is no dashboard login, no remote tamper-evident log, and no claim that OWASP ASVS, NIST CSF, or ISO 27001 controls are fully implemented.
+
+**Repository controls.** `CODEOWNERS` assigns `*` and `/TrackerProject/` to `@code4johnm`. Branch ruleset `protect-master` (id 26551401) requires the status check context `auction`. Deletion and non-fast-forward pushes are blocked. Administrators and `code4johnm` can bypass. IRB approval and isolated deployment remain mandatory.
+
+**Status**: Suitable only for controlled academic and internal research in an isolated environment after IRB approval. Not production-ready. Not an authority to operate.
 
 See [docs/Security-Hardening.md](docs/Security-Hardening.md) and [docs/SECURITY.md](docs/SECURITY.md) for the full threat model, OWASP/NIST mapping, and prioritized remediation roadmap.
 

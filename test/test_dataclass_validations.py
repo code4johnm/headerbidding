@@ -62,11 +62,15 @@ def test_save_content_type():
     validate_browser_params(browser_params)
 
     browser_params.save_content = "script"
+    browser_params.save_content_justification = (
+        "Retain script bodies for the validation test."
+    )
+    browser_params.save_content_max_bytes = 2_000_000
     validate_browser_params(browser_params)
 
 
 def test_log_file_extension():
-    manager_params = ManagerParams()
+    manager_params = ManagerParams(allowed_domains=["example.com"])
 
     manager_params.log_path = "something.unsupported"
     with pytest.raises(ConfigError):
@@ -78,7 +82,7 @@ def test_log_file_extension():
 
 
 def test_failure_limit():
-    manager_params = ManagerParams()
+    manager_params = ManagerParams(allowed_domains=["example.com"])
 
     manager_params.failure_limit = "not None and not int"
     with pytest.raises(ConfigError):
@@ -92,7 +96,9 @@ def test_failure_limit():
 
 
 def test_num_browser_crawl_config():
-    manager_params = ManagerParams(num_browsers=2)
+    manager_params = ManagerParams(
+        num_browsers=2, allowed_domains=["example.com"]
+    )
     browser_params = [BrowserParams()]
 
     with pytest.raises(ConfigError):

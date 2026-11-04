@@ -25,6 +25,12 @@ manager_params = ManagerParams(
     num_browsers=4,
     data_directory=Path("./datadir/"),
     log_path=Path("./datadir/openwpm.log"),
+    # Required. Hostnames only. Visit URLs must be http(s) and match
+    # exactly or as a dot-boundary suffix. Subresources are not filtered.
+    allowed_domains=["publisher.example"],
+    # Library default is False. Turn on to redact emails, tokens, and
+    # long hex strings in selected body fields before storage.
+    redact_identifiers=True,
 )
 
 browser_params = [
@@ -32,11 +38,15 @@ browser_params = [
         http_instrument=True,
         js_instrument=True,
         cookie_instrument=True,
-        # ... see full options below
+        save_content=False,
     )
     for _ in range(4)
 ]
 ```
+
+`save_content` defaults to `False`. `True` is rejected. A resource-type list also requires `save_content_justification` (at least 20 characters) and `save_content_max_bytes` (1 through 5000000). `allowed_domains` is required even when every other manager field is left at its default. A missing list fails validation.
+
+`TaskManager` appends JSON lines to `data_directory/security-audit.jsonl` with `ts`, `event`, `correlation_id`, and `severity`. Bodies are not written there. Encrypt `datadir/` with LUKS, or archive it with `age` (`scripts/protect-datadir.sh` exits non-zero when `age` is not installed). The directory is plaintext until one of those is done.
 
 Legacy dictionary style (`TaskManager.load_default_params`) is deprecated and will be removed.
 

@@ -5,9 +5,15 @@ import os
 import random
 import sys
 import time
-from subprocess import call
+from pathlib import Path
+from subprocess import call, run
 
 from HBLogger import HBLogger
+
+_SRC = str(Path(__file__).resolve().parents[3])
+if _SRC not in sys.path:
+    sys.path.insert(0, _SRC)
+import coord
 
 
 top_20_trackers = { "alphabet": 1499729,
@@ -66,28 +72,29 @@ intentTrainingTypes = ['NO_INTENT','INTENT']
 # intentTrainingTypes = ['NO_INTENT']
 
 trainingRounds = 0
-training_profile_dir = '~/headerBidding/TrackingProject/profiles/training'
-results_dir = '~/headerBidding/TrackingProject/results/owpm/training'
-archive_dir = '/mnt/hgfs/archive_save/ml_training'
+training_profile_dir = str(coord.tracker_path("profiles", "training"))
+results_dir = str(coord.tracker_path("results", "owpm", "training"))
+archive_dir = str(coord.archive_root() / "ml_training")
+training_manifest_path = str(coord.training_manifest_path())
 
 
 
 def archive_training(timestamp, category, intent, training_profile_logs):
     msg = "archiving profile and results"
     hblogger.info(msg)
-    timestamp = str(timestamp)
-    crawl_dir = '{}/{}_{}'.format(archive_dir, timestamp, intent)    
+    timestamp = coord.safe_name(str(timestamp))
+    intent_name = coord.safe_name(str(intent))
+    crawl_dir = os.path.join(archive_dir, '{}_{}'.format(timestamp, intent_name))
+    os.makedirs(crawl_dir, exist_ok=True)
     training_profile_logs['storage_location'] = crawl_dir+'_TRAINING'+'.tar'
 
     manifest = training_profile_logs
 
-    path = os.path.join(crawl_dir, 'manifest_{}.json'.format(timestamp))
+    manifest_name = 'manifest_{}.json'.format(timestamp)
+    path = os.path.join(crawl_dir, manifest_name)
     with open(path,'w') as f: 
         json.dump(manifest, f, separators=(',',':'), indent=4)
      
-    if not os.path.exists('{}'.format(crawl_dir)):
-        os.system('mkdir {}'.format(crawl_dir))
-    
     if os.path.exists('{}'.format(crawl_dir)):
         
         training_profile = os.path.join(training_profile_dir, timestamp, category)
@@ -107,8 +114,8 @@ def archive_training(timestamp, category, intent, training_profile_logs):
         
         hblogger.info(msg)
 
-        os.system('mv {} {}/profile'.format(training_profile, crawl_dir))
-        os.system('mv {} {}/results'.format(results_folder, crawl_dir))
+        run(['mv', training_profile, os.path.join(crawl_dir, 'profile')], check=False)
+        run(['mv', results_folder, os.path.join(crawl_dir, 'results')], check=False)
         # os.system('mv {} {}'.format(old_hars_path, new_hars_path))
 
 
@@ -119,26 +126,26 @@ def archive_training(timestamp, category, intent, training_profile_logs):
 
                 
         # os.system('tar -C {} -cvf {}_TRAINING.tar hars profile results manifest_{}.json'.format(crawl_dir, crawl_dir, timestamp))
-        os.system('tar -C {} -cvf {}_TRAINING.tar profile results manifest_{}.json'.format(crawl_dir, crawl_dir, timestamp))
+        run(
+            ['tar', '-C', crawl_dir, '-cvf', crawl_dir + '_TRAINING.tar', 'profile', 'results', manifest_name],
+            check=False,
+        )
 
-        os.system('echo {} > trainingComplete.json')
-        os.system('rm -rf {}'.format(crawl_dir))
+        with open('trainingComplete.json', 'w', encoding='utf-8') as handle:
+            handle.write('{}\n')
+        run(['rm', '-rf', crawl_dir], check=False)
         msg = "removing profile and results"
         
         hblogger.info(msg)
-        os.system('rm -rf {}/{}'.format(training_profile_dir,timestamp))
-        os.system('rm -rf {}/{}'.format(results_dir,timestamp))
+        run(['rm', '-rf', os.path.join(training_profile_dir, timestamp)], check=False)
+        run(['rm', '-rf', os.path.join(results_dir, timestamp)], check=False)
         # os.system('rm -rf /mnt/hgfs/archive_save/hars/{}_{}'.format(timestamp, intent))
         # os.system('rm -rf /mnt/hgfs/archive_save/ml_training/hars/*')
 
-        training_manifest = []
-        with open('/mnt/hgfs/archive_save/ml_testing/training_manifest.json') as f: 
-            training_manifest = json.load(f)
+        def _add_manifest(training_manifest):
+            training_manifest[training_profile_logs['training_id']] = manifest
 
-        training_manifest.update({training_profile_logs['training_id']: manifest})
-
-        with open('/mnt/hgfs/archive_save/ml_testing/training_manifest.json', 'w') as f: 
-            json.dump(training_manifest, f, separators=(',',':'), indent=4)
+        coord.update_json(training_manifest_path, {}, _add_manifest)
 
         msg = "archive complete"
         
@@ -169,7 +176,7 @@ skip_intent = 0
 while trainingRounds < 100000: 
     #pick up where we left off
     if not checked_training_rounds:
-        with open('/mnt/hgfs/archive_save/ml_testing/training_manifest.json') as f:
+        with open(training_manifest_path) as f:
             training_manifest_file = json.load(f)
             for value in training_manifest_file: 
                 try: 

@@ -1,0 +1,4 @@
+# Hashed control-plane pins for the auction CI job.
+# This file does not represent environment.yaml or the conda Firefox stack.
+pytest==9.1.1
+dataclasses-json==0.6.7

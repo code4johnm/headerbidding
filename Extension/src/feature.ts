@@ -58,8 +58,14 @@ async function main() {
     config.browser_id,
   );
 
-  if (config.custom_params.pre_instrumentation_code) {
-    eval(config.custom_params.pre_instrumentation_code);
+  if (config.custom_params && config.custom_params.pre_instrumentation_code) {
+    if (config.custom_params.allow_pre_instrumentation_eval === true) {
+      eval(config.custom_params.pre_instrumentation_code);
+    } else {
+      console.error(
+        "Refusing pre_instrumentation_code because allow_pre_instrumentation_eval is not true.",
+      );
+    }
   }
   if (config.navigation_instrument) {
     loggingDB.logDebug("Navigation instrumentation enabled");

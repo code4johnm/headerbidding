@@ -4,10 +4,16 @@ import json
 import os
 import sys
 import time
+from pathlib import Path
 from pprint import pprint
 
 import arff
 from HBLogger import HBLogger
+
+_SRC = str(Path(__file__).resolve().parents[3])
+if _SRC not in sys.path:
+    sys.path.insert(0, _SRC)
+import coord
 
 """
 seed profile trackers detected: 
@@ -391,7 +397,7 @@ class ml_analysis:
             else: 
                 ret = False
             # print(self.save_data['all_rows']['bids'])
-        ml_analysis_path = '/mnt/hgfs/archive_save/ml_testing/ready_for_analysis'
+        ml_analysis_path = str(coord.archive_root() / "ml_testing" / "ready_for_analysis")
         tmp_path = os.path.join(ml_analysis_path, 'tmp')
 
         if not os.path.exists(tmp_path):

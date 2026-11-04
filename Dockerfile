@@ -1,40 +1,53 @@
-#=============================================================
-# Dockerfile for OpenWPM
-# See README.md for build & use instructions
-#=============================================================
+# Ubuntu 24.04 LTS. The digest is the manifest list resolved on 2026-11-04.
+# Miniforge is pinned to release 26.9.4-1. The installer bytes are not
+# digest-pinned in this file. There is no passwordless sudo and no root
+# runtime user. Firefox installation is not hidden with "|| true".
 
-FROM ubuntu:24.04
+FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS base
 
-#=============================================================
-# Packages required for container setup
-#=============================================================
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        wget \
+        bzip2 \
+        tar \
+        gzip \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -m -s /bin/bash -u 1000 user \
+    && mkdir -p /opt/OpenWPM \
+    && chown user:user /opt/OpenWPM
 
-RUN apt-get -qqy update && apt-get -qqy install -y sudo curl ca-certificates git build-essential
-
-#=============================================================
-# Copy OpenWPM source
-#=============================================================
-RUN mkdir -p /opt/OpenWPM
 WORKDIR /opt/OpenWPM
 
-# Copy the modern project layout
-COPY . /opt/OpenWPM/
+FROM base AS build
 
-#=============================================================
-# Add normal user with passwordless sudo, and switch
-#=============================================================
-RUN useradd -m -s /bin/bash -u 1000 user && \
-    usermod -a -G sudo user && \
-    echo 'ALL ALL = (ALL) NOPASSWD: ALL' >> /etc/sudoers
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/*
+USER user
+ENV PATH="/home/user/conda/bin:${PATH}"
+
+RUN curl -fsSL -o /tmp/miniforge.sh \
+        https://github.com/conda-forge/miniforge/releases/download/26.9.4-1/Miniforge3-Linux-x86_64.sh \
+    && bash /tmp/miniforge.sh -b -p /home/user/conda \
+    && rm /tmp/miniforge.sh
+
+COPY --chown=user:user . /opt/OpenWPM
+
+RUN conda env create -f environment.yaml -n openwpm \
+    && conda clean -a -y \
+    && conda run -n openwpm bash scripts/install-firefox.sh
+
+FROM base AS runtime
+
+COPY --from=build --chown=user:user /home/user/conda /home/user/conda
+COPY --from=build --chown=user:user /opt/OpenWPM /opt/OpenWPM
 
 USER user
-ENV PATH="/home/user/.local/bin:/home/user/conda/bin:${PATH}"
+ENV PATH="/home/user/conda/bin:${PATH}"
+WORKDIR /opt/OpenWPM
 
-# Install modern conda env + Firefox 150+
-RUN curl -fsSL https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-$(uname -m).sh -o /tmp/miniforge.sh && \
-    bash /tmp/miniforge.sh -b -p /home/user/conda && rm /tmp/miniforge.sh
-
-RUN /home/user/conda/bin/conda env create -f environment.yaml -n openwpm && \
-    /home/user/conda/bin/conda clean -a -y
-
-RUN /home/user/conda/bin/conda run -n openwpm bash scripts/install-firefox.sh || true
+CMD ["/home/user/conda/bin/conda", "run", "--no-capture-output", "-n", "openwpm", "python", "scripts/minimal-crawl.py", "--check"]

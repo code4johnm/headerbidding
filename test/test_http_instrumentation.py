@@ -16,7 +16,7 @@ import pytest
 from openwpm import command_sequence, task_manager
 from openwpm.command_sequence import CommandSequence
 from openwpm.commands.types import BaseCommand
-from openwpm.config import BrowserParams, ManagerParams
+from openwpm.config import ALL_RESOURCE_TYPES, BrowserParams, ManagerParams
 from openwpm.storage.leveldb import LevelDbProvider
 from openwpm.storage.sql_provider import SQLiteStorageProvider
 from openwpm.utilities import db_utils
@@ -24,6 +24,17 @@ from openwpm.utilities import db_utils
 from . import utilities
 from .conftest import FullConfig, HttpParams, TaskManagerCreator
 from .openwpmtest import OpenWPMTest
+
+_CONTENT_JUSTIFICATION = (
+    "Browser test retains response bodies to verify content hashes."
+)
+_CONTENT_CAP = 2_000_000
+
+
+def _enable_saved_content(browser_param, types):
+    browser_param.save_content = types
+    browser_param.save_content_justification = _CONTENT_JUSTIFICATION
+    browser_param.save_content_max_bytes = _CONTENT_CAP
 
 # Data for test_page_visit
 # format: (
@@ -942,7 +953,7 @@ def test_javascript_saving(http_params, xpi, server):
 
     for browser_param in browser_params:
         browser_param.http_instrument = True
-        browser_param.save_content = "script"
+        _enable_saved_content(browser_param, "script")
 
     structured_storage = SQLiteStorageProvider(
         db_path=manager_params.data_directory / "crawl-data.sqlite"
@@ -977,7 +988,7 @@ def test_document_saving(http_params, xpi, server):
     manager_params, browser_params = http_params()
     for browser_param in browser_params:
         browser_param.http_instrument = True
-        browser_param.save_content = "main_frame,sub_frame"
+        _enable_saved_content(browser_param, "main_frame,sub_frame")
 
     structured_storage = SQLiteStorageProvider(
         db_path=manager_params.data_directory / "crawl-data.sqlite"
@@ -1005,7 +1016,9 @@ def test_content_saving(http_params, xpi, server):
     manager_params, browser_params = http_params()
     for browser_param in browser_params:
         browser_param.http_instrument = True
-        browser_param.save_content = True
+        _enable_saved_content(
+            browser_param, ",".join(sorted(ALL_RESOURCE_TYPES))
+        )
     db = manager_params.data_directory / "crawl-data.sqlite"
     structured_storage = SQLiteStorageProvider(db_path=db)
     ldb_path = Path(manager_params.data_directory) / "content.ldb"

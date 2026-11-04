@@ -29,6 +29,12 @@ Last Updated: 2026-05-27 15:51 (UTC)
 
 **Explicit Statement**: The platform intentionally bundles or historically referenced severely outdated browser components. The correct response to most legacy browser CVEs is **migration and containment**, not backporting patches.
 
+This repository is not production-ready. Hardening landed on 2026-11-04 does not complete OWASP ASVS 4.0 Level 2, NIST CSF, or ISO 27001. It does not grant an authority to operate. IRB approval and an isolated deployment are still required before a crawl. Do not send `datadir/`, cookies, or bid logs to an issue tracker.
+
+`CODEOWNERS` names `@code4johnm` for the repository and for transitional `TrackerProject/`. Ruleset `protect-master` (id 26551401) on `refs/heads/master` blocks deletion and non-fast-forward pushes and requires the status check context `auction`. The bypass actors are the admin role and GitHub user `code4johnm` (id 135864018). Do not create a second ruleset and do not delete this one to make a push succeed.
+
+Report vulnerabilities through a private GitHub security advisory on `code4johnm/headerbidding`, then email with the subject prefix `[SECURITY] [headerbidding]`.
+
 ---
 
 ## 2. Reporting a Vulnerability

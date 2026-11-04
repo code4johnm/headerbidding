@@ -19,7 +19,7 @@ Last Updated: 2026-05-27 15:51 (UTC)
 
 The headerbidding platform is a **high-privilege, high-sensitivity research instrument**. It intentionally operates with elevated browser privileges to achieve measurement goals that standard web crawlers cannot. This design creates an intrinsic tension between research utility and security.
 
-**Current Posture Assessment (2026-04)**: **High Risk – Suitable only for hardened, isolated research deployments after implementing controls in this document.**
+**Current Posture Assessment (2026-11-04)**: **High Risk.** Some controls from this guide are now in the tree. The platform is still a high-privilege research instrument. It is not production-ready, not certified, and not an authority to operate. Isolated deployment and IRB approval remain mandatory.
 
 **Primary Attack Surfaces** (ranked by exposure):
 
@@ -35,13 +35,23 @@ The headerbidding platform is a **high-privilege, high-sensitivity research inst
 - Addition of this dedicated hardening guide and [docs/AI-Agent-Context.md](docs/AI-Agent-Context.md).
 - CI security scanning (CodeQL) and coverage reporting.
 
-**Remaining Critical Gaps** (must be addressed before production-scale or multi-researcher use):
-- No encryption at rest or field-level redaction for telemetry.
-- Legacy TrackerProject paths and race-prone coordination.
-- Outdated Dockerfiles and install scripts.
-- Absence of capability-based or allow-list enforcement at the TaskManager boundary.
-- Insufficient security-focused audit logging and anomaly detection.
-- No SBOM or reproducible build attestation.
+**Controls landed (2026-11-04)** — see the README status section for the file list:
+
+- Configurable TrackerProject roots and an exclusive `fcntl` lock around JSON read-modify-write. `writing.json` is not a lock.
+- Visit-URL allow-list (`ManagerParams.allowed_domains`), rejection of bare `save_content=True`, content size cap, and optional identifier redaction.
+- JSON exception IPC with an allow-list. Loopback-only extension sockets. Profile filename checks. Gated `pre_instrumentation_code`.
+- Local JSONL security audit log. `scripts/protect-datadir.sh` documents `age` or LUKS and fails closed when `age` is absent.
+- Hash-pinned `requirements-hardening.txt`, `pip-audit` failure in the `auction` job, and `docs/sbom.cdx.json` for that pin set only.
+- Dockerfile updated to Ubuntu 24.04 (pinned manifest-list digest), non-root user, no passwordless sudo, pinned Miniforge 26.9.4-1. The image was not built in that change.
+
+**Remaining critical gaps:**
+
+- `unsafe-eval` is still required for JavaScript instrumentation. Manifest V2 and `<all_urls>` remain. Dill is still used for Python storage IPC.
+- Subresources and in-command `webdriver.get` calls are outside the visit allow-list. There is no egress proxy in the repository.
+- `datadir/` is not encrypted by the software. Redaction is off unless the caller sets it. `crawler.py` and `scripts/minimal-crawl.py` set it on.
+- Commented absolute paths and other `os.system` calls remain in TrackerProject. The conda stack in `environment.yaml` is not covered by the hashed audit (OpenWPM-1776's separate Dependabot alerts are a different repository).
+- No dashboard authentication, no remote tamper-evident log, no SLSA provenance, and no claim that ASVS Level 2 or NIST CSF outcomes are met.
+- A full Firefox crawl and a container build were not executed. `scripts/minimal-crawl.py --check` only validates configuration.
 
 ---
 
@@ -51,15 +61,15 @@ The headerbidding platform is a **high-privilege, high-sensitivity research inst
 
 | Category | Current State | Required Hardening Controls | Priority | Verification |
 |----------|---------------|-----------------------------|----------|--------------|
-| A01:2021 Broken Access Control | Poor | Enforce site allow-lists at TaskManager; capability tokens for AI agents; no unauthenticated IPC or FS coordination | P0 | pytest + manual review |
-| A02:2021 Cryptographic Failures | Critical | Encrypt sensitive Parquet/SQLite at rest (age or LUKS); hash or redact high-entropy identifiers; TLS everywhere for S3/GCS | P0 | config validation + integration tests |
+| A01:2021 Broken Access Control | Partial | Visit allow-list is enforced. Capability tokens, subresource filtering, and egress proxy are not. | P0 | `test/test_security_controls.py` |
+| A02:2021 Cryptographic Failures | High | `age`/LUKS guidance fails closed without `age`. Redaction is optional and off by default in the library. Storage is plaintext until the operator encrypts it. | P0 | `scripts/protect-datadir.sh` |
 | A03:2021 Injection | Medium | Replace broad `execute_script` patterns with strict templates; parameterize all storage writes; validate all injected JS | P1 | SAST + fuzzing of bid harvesters |
 | A04:2021 Insecure Design | High | Move to capability-based command model; data classification labels on all records; eliminate JSON mutex files | P0 | Architecture review |
-| A05:2021 Security Misconfiguration | High | Default `BrowserParams` must be least-privilege; harden Firefox prefs; remove `unsafe-eval` where feasible or document residual risk | P1 | Pre-commit + CI gate |
-| A06:2021 Vulnerable Components | Critical | Pin all deps with hashes; generate SBOM (CycloneDX); schedule Firefox/geckodriver upgrades; deprecate legacy TrackerProject | P0 | `scripts/repin.sh` + dependabot + CodeQL |
+| A05:2021 Security Misconfiguration | High | `save_content` defaults off and bare `True` is rejected. `unsafe-eval` remains and is documented in `docs/extension-privileges.md`. | P1 | extension guard tests |
+| A06:2021 Vulnerable Components | Partial | `requirements-hardening.txt` is hash-pinned and `pip-audit` fails the `auction` job on any known vulnerability in that file. `environment.yaml` is unchanged and is not in that gate. `scripts/repin.sh` still owns conda pins. | P0 | auction workflow |
 | A07:2021 Identification Failures | N/A (local) | Add strong identity for any future dashboard or multi-tenant deployment | P2 | — |
 | A08:2021 Data Integrity | High | Sign crawl manifests and result sets; use content-addressable storage for artifacts; reject unsigned bid JSON | P1 | New signing module |
-| A09:2021 Security Logging | Poor | Implement structured security event logging (see §7); forward to SIEM or local auditd | P0 | Logging PR + tests |
+| A09:2021 Security Logging | Partial | `security-audit.jsonl` records crawl config, profile creation, browser launch, command-sequence URLs, extension socket client names, and storage writes. It is a local file, not a SIEM, and it is not tamper-evident. | P0 | `test/test_security_controls.py` |
 | A10:2021 SSRF | Medium (by design) | Mandatory egress proxy with allow-list + rate limits; DNS sinkholing for research | P0 | NetworkPolicy + proxy deployment guide |
 
 ### 2.2 NIST Cybersecurity Framework – Target Implementation
@@ -172,19 +182,19 @@ Storage + Optional LLM Summary Generator (read-only, sandboxed)
 
 ### Phase 0 – Immediate (Before Any New Research Run)
 
-- [ ] Replace all absolute paths in `TrackerProject/` with relative or configurable paths. Remove or sandbox the legacy layer.
+- [x] Replace live absolute paths in `TrackerProject/` with `HB_TRACKER_ROOT`, `HB_ARCHIVE_DIR`, and `HB_TRAINING_MANIFEST`. The layer stays transitional. Commented paths and remaining `os.system` calls are residual.
 - [ ] Deploy an egress HTTP/SOCKS proxy with explicit destination allow-list + logging (e.g., mitmproxy or tinyproxy in allow-list mode).
-- [ ] Enable full-disk encryption or per-dataset LUKS volumes for `datadir/`.
+- [ ] Enable full-disk encryption or per-dataset LUKS volumes for `datadir/`. `scripts/protect-datadir.sh` only documents `age` or LUKS and fails closed when `age` is absent.
 - [ ] Run all crawls inside a dedicated VM or Kubernetes namespace with `seccomp`, `apparmor`, and `NetworkPolicy` denying all egress except proxy + storage.
-- [ ] Set `browser_params[*].save_content = False` by default; enable only for allow-listed MIME types with size caps.
+- [x] `save_content` defaults to false. A resource-type list requires a justification and `save_content_max_bytes` of at most 5000000. Bare `True` is rejected.
 
 ### Phase 1 – Foundational (1–2 Sprints)
 
-- [ ] Implement structured security audit logging (Python `logging` + JSON + correlation IDs).
-- [ ] Add `ManagerParams` validation that rejects configurations without an explicit `allowed_domains` list.
-- [ ] Generate and enforce SBOM (CycloneDX) in CI; fail on known vulnerable components above threshold.
-- [ ] Update Dockerfiles to current Ubuntu LTS, non-root user, pinned base images, and multi-stage builds. Remove passwordless sudo.
-- [ ] Replace pickle exception transport with a safer schema (e.g., msgpack + explicit allow-list of exception types).
+- [x] Structured security audit logging is JSONL with a correlation id (`openwpm/security_log.py`). It is local only.
+- [x] `validate_manager_params` rejects a missing or empty `allowed_domains` list before the default-object short circuit. Visit URLs are checked in `execute_command_sequence`.
+- [x] `docs/sbom.cdx.json` covers `requirements-hardening.txt`. The `auction` job runs `pip-audit` and fails on any known vulnerability in that file. The threshold is any known vulnerability. Conda is out of scope for that job.
+- [x] `Dockerfile` is Ubuntu 24.04 with digest `sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852`, a uid 1000 user, no sudo, and Miniforge 26.9.4-1. The image was not built here, and the Miniforge installer bytes are not digest-pinned.
+- [x] Pickle exception transport was replaced by JSON schema `openwpm.exc.v1` and an allow-list (`openwpm/ipc_exceptions.py`).
 
 ### Phase 2 – Advanced Containment
 
@@ -259,14 +269,14 @@ A template playbook must be stored in `docs/incident-response.md` (to be created
 
 | Gap | Impact | Effort | Target Quarter |
 |-----|--------|--------|----------------|
-| Hardcoded paths + JSON mutexes in TrackerProject | Data loss, integrity, reproducibility | Medium | Q2 2026 |
-| No encryption-at-rest or redaction | High (regulatory + re-id) | High | Q2 2026 |
-| Legacy Dockerfiles & install scripts | Supply chain & container escape | Low | Q2 2026 |
-| Insufficient security audit logging | Detection & forensics | Medium | Q3 2026 |
-| No capability / allow-list enforcement at TaskManager | AI agent blast radius | High | Q3 2026 |
-| Pickle IPC for errors | Latent deserialization | Low | Q2 2026 |
-| Manifest V2 + unsafe-eval | Extension escape | High | 2026 H2 |
-| Absence of SBOM + signed builds | Supply chain | Medium | Q2 2026 |
+| Commented TrackerProject paths and remaining `os.system` | Data loss if those scripts are used as-is | Medium | Open |
+| Encryption-at-rest not performed by the platform | High if `datadir/` leaves the host | High | Open. Helper only. |
+| Container image not built or attested in this change | Supply chain | Medium | Open |
+| Audit log is local and not tamper-evident | Detection | Medium | Open |
+| No capability tokens; subresources not on the allow-list | Blast radius | High | Open |
+| Dill storage IPC | Latent deserialization on the research host | Medium | Open |
+| Manifest V2 + unsafe-eval | Extension escape | High | Open. Documented. |
+| Conda/`environment.yaml` not in the hashed SBOM | Supply chain | High | Open. `scripts/repin.sh` owns those pins. |
 
 All P0 items above must be resolved or explicitly risk-accepted (with compensating controls) before the platform is used for any study that collects data on real users or production publisher properties.
 

@@ -12,6 +12,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -r requirements-auction.txt
-      - run: python -m pytest test/test_hb_auction.py test/test_script_utils_bids.py -q
-      - run: python demo.py --headless
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install hashed control-plane dependencies
+        run: python -m pip install --require-hashes -r requirements-hardening.txt
+      - name: Audit the hashed control-plane pins
+        run: |
+          python -m pip install pip-audit==2.9.0
+          python -m pip_audit -r requirements-hardening.txt --disable-pip
+      - name: Tests
+        run: python -m pytest test/test_hb_auction.py test/test_script_utils_bids.py test/test_tracker_coord.py test/test_ipc_exceptions.py test/test_security_controls.py test/test_extension_guardrails.py test/test_dataclass_validations.py -q
+      - name: Auction demo
+        run: python demo.py --headless
+      - name: Hardened configuration check
+        run: python scripts/minimal-crawl.py --check
+      - name: Privileged extension syntax
+        run: |
+          node --check Extension/bundled/privileged/sockets/api.js
+          node --check Extension/bundled/privileged/profileDirIO/api.js

@@ -42,6 +42,8 @@ eggs/
 parts/
 sdist/
 var/
+# Transitional TrackerProject state. HB_TRACKER_ROOT defaults here.
+TrackerProject/var/
 *.egg-info/
 .installed.cfg
 *.egg

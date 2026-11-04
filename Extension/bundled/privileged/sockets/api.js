@@ -14,6 +14,18 @@ const gManager = {
 
 let bufferpack;
 
+function isLoopbackHost(host) {
+  if (typeof host !== "string") {
+    return false;
+  }
+  const normalized = host.trim().toLowerCase().replace(/^\[|\]$/g, "");
+  return (
+    normalized === "127.0.0.1" ||
+    normalized === "localhost" ||
+    normalized === "::1"
+  );
+}
+
 this.sockets = class extends ExtensionAPI {
   getAPI(context) {
     if (!bufferpack) {
@@ -42,6 +54,16 @@ this.sockets = class extends ExtensionAPI {
           const socket = gManager.serverSocketMap.get(port);
           socket.asyncListen({
             onSocketAccepted: (sock, transport) => {
+              const peer = transport.host || "";
+              if (peer && !isLoopbackHost(peer)) {
+                console.error("Rejected non-loopback socket peer", peer);
+                try {
+                  transport.close(Cr.NS_BINDING_ABORTED);
+                } catch (closeError) {
+                  console.error(closeError);
+                }
+                return;
+              }
               const inputStream = transport.openInputStream(0, 0, 0);
               const socketListener = {
                 onInputStreamReady: () => {
@@ -111,6 +133,20 @@ this.sockets = class extends ExtensionAPI {
               "Unknown socket ID; trying to use a socket that doesn't exist yet?",
             );
             return;
+          }
+          const numericPort = Number(port);
+          if (
+            !isLoopbackHost(host) ||
+            !Number.isInteger(numericPort) ||
+            numericPort < 1 ||
+            numericPort > 65535
+          ) {
+            console.error(
+              "Rejected non-loopback or invalid socket target",
+              host,
+              port,
+            );
+            return false;
           }
 
           try {

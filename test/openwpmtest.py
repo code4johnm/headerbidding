@@ -61,7 +61,10 @@ class OpenWPMTest:
         if not data_dir:
             data_dir = self.tmpdir
         assert data_dir is not None  # Mypy doesn't understand this without help
-        manager_params = ManagerParams(num_browsers=num_browsers)
+        manager_params = ManagerParams(
+            num_browsers=num_browsers,
+            allowed_domains=["localhost", "127.0.0.1", "invalid"],
+        )
         browser_params = [BrowserParams() for _ in range(num_browsers)]
         manager_params.log_path = data_dir / "openwpm.log"
         manager_params.num_browsers = num_browsers

@@ -71,10 +71,10 @@ def test_crash_profile(default_params, task_manager_creator):
     manager, _ = task_manager_creator((manager_params, browser_params[:1]))
     try:
         manager.get(BASE_TEST_URL)  # So we have a profile
-        manager.get("example.com")  # Selenium requires scheme prefix
-        manager.get("example.com")  # Selenium requires scheme prefix
-        manager.get("example.com")  # Selenium requires scheme prefix
-        manager.get("example.com")  # Requires two commands to shut down
+        manager.get("http://127.0.0.1:1/")
+        manager.get("http://127.0.0.1:1/")
+        manager.get("http://127.0.0.1:1/")
+        manager.get("http://127.0.0.1:1/")
     except CommandExecutionError:
         pass
     assert (browser_params[0].profile_archive_dir / "profile.tar.gz").is_file()
@@ -103,7 +103,7 @@ def test_profile_saved_when_launch_crashes(
     monkeypatch.setenv("FIREFOX_BINARY", "/tmp/NOTREAL")
     manager.browsers[0]._SPAWN_TIMEOUT = 2  # Have timeout occur quickly
     manager.browsers[0]._UNSUCCESSFUL_SPAWN_LIMIT = 2  # Quick timeout
-    manager.get("example.com")  # Cause a selenium crash to force browser to restart
+    manager.get("http://127.0.0.1:1/")  # Cause a navigation failure to force a restart
 
     try:
         manager.get(BASE_TEST_URL)
@@ -234,10 +234,10 @@ def test_profile_recovery(
         pass
     elif testcase == "on_crash":
         # Cause a selenium crash to force browser to restart
-        manager.get("example.com", reset=not stateful)
+        manager.get("http://127.0.0.1:1/", reset=not stateful)
     elif testcase == "on_crash_during_launch":
-        # Cause a selenium crash to force browser to restart
-        manager.get("example.com", reset=not stateful)
+        # Cause a navigation failure to force browser to restart
+        manager.get("http://127.0.0.1:1/", reset=not stateful)
         # This will cause browser restarts to fail
         monkeypatch.setenv("FIREFOX_BINARY", "/tmp/NOTREAL")
 
@@ -249,9 +249,9 @@ def test_profile_recovery(
         Thread(target=undo_monkeypatch).start()
     elif testcase == "on_timeout":
         # Set a very low timeout to cause a restart
-        manager.get("about:config", reset=not stateful, timeout=0.1)
+        manager.get("http://127.0.0.1:1/", reset=not stateful, timeout=0.1)
 
-    cs = CommandSequence("about:config", reset=not stateful)
+    cs = CommandSequence(BASE_TEST_URL, reset=not stateful)
     expected_value = True if seed_tar else False
     cs.append_command(AssertConfigSetCommand("test_pref", expected_value))
     tar_directory = manager_params.data_directory / "browser_profile"
