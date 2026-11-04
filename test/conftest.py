@@ -2,24 +2,22 @@ import logging
 import os
 import subprocess
 from pathlib import Path
-from typing import Any, Callable, Generator, List, Literal, Protocol, Tuple, TypeAlias
+from typing import Any, Callable, Generator, List, Literal, Protocol, Tuple
 
 import pytest
 
-from openwpm.config import BrowserParams, ManagerParams
-from openwpm.mp_logger import MPLogger
-from openwpm.storage.sql_provider import SQLiteStorageProvider
-from openwpm.task_manager import TaskManager
-
 from . import utilities
-from .openwpmtest import NUM_BROWSERS
+
+# Browser tests import OpenWPM inside fixtures. Importing it here required
+# the full conda env (dataclasses_json and the rest) before any test could
+# be collected, including the standard-library auction tests.
+NUM_BROWSERS = 2
 
 EXTENSION_DIR = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     "..",
     "Extension",
 )
-pytest_plugins = "test.storage.fixtures"
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -61,12 +59,10 @@ def server():
     server_thread.join()
 
 
-FullConfig: TypeAlias = tuple[ManagerParams, list[BrowserParams]]
-
-
 @pytest.fixture()
-def default_params(tmp_path: Path, num_browsers: int = NUM_BROWSERS) -> FullConfig:
-    """Just a simple wrapper around task_manager.load_default_params"""
+def default_params(tmp_path: Path, num_browsers: int = NUM_BROWSERS):
+    """Browser and manager params for a headless test crawl."""
+    from openwpm.config import BrowserParams, ManagerParams
 
     manager_params = ManagerParams(
         num_browsers=num_browsers
@@ -81,16 +77,16 @@ def default_params(tmp_path: Path, num_browsers: int = NUM_BROWSERS) -> FullConf
     return manager_params, browser_params
 
 
-TaskManagerCreator: TypeAlias = Callable[[FullConfig], Tuple[TaskManager, Path]]
-
-
 @pytest.fixture()
-def task_manager_creator(server: None, xpi: None) -> TaskManagerCreator:
+def task_manager_creator(server: None, xpi: None):
     """We create a callable that returns a TaskManager that has
     been configured with the Manager and BrowserParams"""
 
     # We need to create the fixtures like this because usefixtures doesn't work on fixtures
-    def _create_task_manager(params: FullConfig) -> Tuple[TaskManager, Path]:
+    def _create_task_manager(params):
+        from openwpm.storage.sql_provider import SQLiteStorageProvider
+        from openwpm.task_manager import TaskManager
+
         manager_params, browser_params = params
         db_path = manager_params.data_directory / "crawl-data.sqlite"
         structured_provider = SQLiteStorageProvider(db_path)
@@ -106,14 +102,12 @@ def task_manager_creator(server: None, xpi: None) -> TaskManagerCreator:
 
 
 class HttpParams(Protocol):
-    def __call__(
-        self, display_mode: Literal["headless", "xvfb"] = "headless"
-    ) -> FullConfig: ...
+    def __call__(self, display_mode: Literal["headless", "xvfb"] = "headless"): ...
 
 
 @pytest.fixture()
 def http_params(
-    default_params: FullConfig,
+    default_params,
 ) -> HttpParams:
     manager_params, browser_params = default_params
     for browser_param in browser_params:
@@ -121,7 +115,7 @@ def http_params(
 
     def parameterize(
         display_mode: Literal["headless", "xvfb"] = "headless",
-    ) -> FullConfig:
+    ):
         for browser_param in browser_params:
             browser_param.display_mode = display_mode
         return manager_params, browser_params
@@ -130,7 +124,9 @@ def http_params(
 
 
 @pytest.fixture()
-def mp_logger(tmp_path: Path) -> Generator[MPLogger, Any, None]:
+def mp_logger(tmp_path: Path) -> Generator[Any, Any, None]:
+    from openwpm.mp_logger import MPLogger
+
     log_path = tmp_path / "openwpm.log"
     logger = MPLogger(log_path, log_level_console=logging.DEBUG)
     yield logger

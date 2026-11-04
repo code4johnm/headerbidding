@@ -116,6 +116,15 @@ conda activate openwpm
 > **Note**: The root `./install.sh` still exists for backward compatibility but the
 > conda + `scripts/` path above is the current recommended toolchain.
 
+**Auction check (no browser)**
+
+```bash
+python3 -m pip install -r requirements-auction.txt
+sh scripts/run-auction.sh
+```
+
+That runs the bid request, adapter responses, clearing, win notice, and impression. Assurance notes, the SBOM, and the threat model are in [docs/assurance/README.md](docs/assurance/README.md).
+
 **Minimal Modern Crawl Example**
 
 ```python

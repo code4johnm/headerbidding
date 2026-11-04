@@ -8,6 +8,30 @@ import time
 # from browsermobproxy import Server
 
 
+def load_json_object(path, default):
+    """Read a JSON object. A missing or unreadable file returns default."""
+    try:
+        with open(path, encoding="utf-8") as handle:
+            value = json.load(handle)
+    except (OSError, ValueError):
+        return default
+    if not isinstance(value, type(default)):
+        return default
+    return value
+
+
+def dump_json_object(path, value):
+    """Write JSON with a real indent. json.dump rejects indent=True."""
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    temporary = path + ".tmp"
+    with open(temporary, "w", encoding="utf-8") as handle:
+        json.dump(value, handle, indent=4, separators=(",", ":"))
+        handle.write("\n")
+    os.replace(temporary, path)
+
+
 class ScriptUtils: 
     def __init__(self): 
         self.allowVisit = 1
@@ -58,132 +82,46 @@ class ScriptUtils:
 
     def getCpm(self, iab, visit, site, crawl_type, **kwargs):
         driver = kwargs['driver']
-        data = []
-        done = []
-        writing = []
-        timeout = 0
-
-        with open('writing.json', 'w') as f: 
-            json.dump({'writing':iab}, f)
-        with open('writing.json') as f: 
-            writing = json.load(f)
-        
-        while writing['writing'] != iab or timeout> 90:
-            sleep =random.randint(1,4)
-            print('[SCRIPT UTILS] {} sleeping for {} seconds'.format(iab, sleep))
-            time.sleep(sleep)
-            timeout+=sleep
-            with open('writing.json') as f: 
-                writing = json.load(f)
-                if writing['writing'] == "":
-                    writing['writing'] = iab
-                    print('[SCRIPT UTILS] {}'.format(writing))
-            
-
-
-        try: 
-            with open('testingDone.json') as f: 
-                from subprocess import call
-                call(['echo','printing file...'])
-                call(['cat','testingDone.json'])
-                done = json.load(f)
-        except Exception as e: 
-            print("[SCRIPT UTILS] {} Exception occurred trying to open file {}".format(time.asctime(), e))
-            retry = 0
-            
-            while retry < 20: 
-                try:
-                    with open('testingDone.json') as f: 
-                        done = json.load(f)  
-                        break
-                except: 
-                    print("[SCRIPT UTILS] {} Exception occurred trying to open file {}, retrying: {}".format(time.asctime(), e, retry))
-                    retry+=1
-                    time.sleep(random.randint(1,3))
-            if retry >= 20:
-                print("[SCRIPT UTILS] {} Exception occurred trying to open file {}, quitting...: {}".format(time.asctime(), e, retry))
         domain = driver.current_url
         print(domain)
-        domain = domain.split('//')[0]+'//'+domain.split('//')[1].split('/')[0]
+        parts = domain.split('//')
+        if len(parts) > 1:
+            domain = parts[0] + '//' + parts[1].split('/')[0]
         print('[SCRIPT UTILS] getCpm() domain: {} iab: {}'.format(domain, iab))
         output = []
-        script = self.GET_CPM
-        try: 
-            output = driver.execute_script(script)
-        except Exception as e: 
-            output.append("error: {}".format(e))
+        try:
+            output = driver.execute_script(self.GET_CPM)
+        except Exception as exc:
+            output = ["error: {}".format(exc)]
+        if not isinstance(output, list):
+            output = ["error: script did not return a list"]
         if output == []:
             msg = '[SCRIPT UTILS] No pbjs bids returned'
             print(msg)
-            output.append(msg)   
-            no_bids = []
-            with open('no_bid_sites.json') as f: 
-                no_bids = json.load(f)
-                if site in no_bids: 
-                    no_bids[site]['count'] +=1
-                    no_bids[site]['crawl_info'].append({'site':site, 'visit':visit})
-                else: 
-                    no_bids[site] = {'crawl_info': [{'site':site, 'visit':visit}]}
-                    no_bids[site] = {'count': 1}
-            with open('no_bid_sites.json', 'w') as f: 
-                json.dump(no_bids, f, separators=(',', ':'), indent=4)
-        site = site.split('://')[1]
-        # if iab != 'prebid_crawl':
+            output.append(msg)
+            no_bids = load_json_object('no_bid_sites.json', {})
+            entry = no_bids.get(site) if isinstance(no_bids.get(site), dict) else {}
+            info = entry.get('crawl_info') if isinstance(entry.get('crawl_info'), list) else []
+            info.append({'site': site, 'visit': visit})
+            no_bids[site] = {'count': int(entry.get('count') or 0) + 1, 'crawl_info': info}
+            dump_json_object('no_bid_sites.json', no_bids)
+        site_name = site.split('://')[1] if '://' in site else site
         if crawl_type == "NO_INTENT":
-            file = os.path.join('./results/bids_no_intent/', site+"_{}.json".format(iab))
+            destination = os.path.join('./results/bids_no_intent/', site_name + "_{}.json".format(iab))
         else:
-            file = os.path.join('./results/bids_intent/', site+"_{}.json".format(iab))
-        # else: 
-        #     file =  os.path.join('./results/pbjs_crawl_bids/', site+".json")
-        try: 
-            with open(file) as f:                  
-                data = json.load(f) 
-        except Exception as e: 
-            with open(file) as f:    
-                data = json.load(f) 
-        # os.system('touch {}'.format(file))
-        for i in output: 
-            if iab in data: 
-                if domain in data[iab]: 
-                    if visit in data[iab][domain]:
-                        data[iab][domain][visit].append(i)
-                    else:
-                        data[iab][domain].update({visit:[i]})
-                else: 
-                    data[iab].update({domain:{visit:[i]}})
-            else: 
-                data[iab] = {domain:{visit:[i]}}
-        
-        try: 
-            with open(file, 'w') as f:
-                print('[SCRIPT UTILS] {} writing to {}'.format(iab, file))
-                json.dump(data, f, indent=True, separators=(',', ':'))
-                os.system('cat {}'.format(file))
-        except Exception as e: 
-            print("[SCRIPT UTILS] Exception: {}. Attempting to write again".format(e))
-            with open(file, 'w') as f: 
-                print('[SCRIPT UTILS] {} writing to {}'.format(iab,  file))
-                json.dump(data, f, indent=True, separators=(',', ':'))                         
+            destination = os.path.join('./results/bids_intent/', site_name + "_{}.json".format(iab))
+        data = load_json_object(destination, {})
+        for item in output:
+            slot = data.setdefault(iab, {}).setdefault(domain, {})
+            slot.setdefault(visit, []).append(item)
+        print('[SCRIPT UTILS] {} writing to {}'.format(iab, destination))
+        dump_json_object(destination, data)
+        done = load_json_object('testingDone.json', {})
         done[iab] = 1
-
-        tmp = []
-        with open('testingDone.json') as f: 
-            tmp = json.load(f)
-            print('[SCRIPT UTILS] {} tmp {}'.format(iab,tmp))
-            for i in done:
-                done[i] = done[i] or tmp[i]
-            print('[SCRIPT UTILS] {} done {}'.format(iab,done))
-
-
-        with open('testingDone.json', 'w') as f: 
-            print('[SCRIPT UTILS] {} writing {} to {}'.format(iab,done, 'testingDone.json'))
-
-            json.dump(done, f, indent=True, separators=(',', ':'))
-
-
-        with open('writing.json', 'w') as f: 
-            json.dump({'writing':""}, f)
-            print('[SCRIPT UTILS] {} finished. '.format(iab))
+        dump_json_object('testingDone.json', done)
+        dump_json_object('writing.json', {'writing': ""})
+        print('[SCRIPT UTILS] {} finished. '.format(iab))
+        return destination
 
 
 
@@ -194,12 +132,9 @@ class ScriptUtils:
         data = []
         domain = driver.current_url
         
-        with open('./results/pbjs_sites_full.json') as f:      
-            data = json.load(f)  
-            data.update({domain: version})
-                    
-        with open('./results/pbjs_sites_full.json', 'w') as f: 
-            json.dump(data, f, indent=True, separators=(',', ':'))
+        data = load_json_object('./results/pbjs_sites_full.json', {})
+        data.update({domain: version})
+        dump_json_object('./results/pbjs_sites_full.json', data)
        
         try:
             with open('pbjsDone.txt', 'w') as f: 
@@ -208,25 +143,10 @@ class ScriptUtils:
             pass
 
     def signalDone(self, iab, **kwargs):
-        data = []
-        try: 
-            with open('trainingDone.json') as f:  
-                data = json.load(f)
-            data.update({iab:1})
-        except: 
-            time.sleep(random.randint(2,6))
-            with open('trainingDone.json') as f:  
-                data = json.load(f)
-            data.update({iab:1})
-            
+        data = load_json_object('trainingDone.json', {})
+        data.update({iab: 1})
         print(data)
-        try: 
-            with open('trainingDone.json', 'w') as f: 
-                json.dump(data, f, indent=4, sort_keys=True, separators=(',', ':'))
-        except: 
-            time.sleep(random.randint(2,6))
-            with open('trainingDone.json', 'w') as f: 
-                json.dump(data, f, indent=4, sort_keys=True, separators=(',', ':'))
+        dump_json_object('trainingDone.json', data)
 
 
     # def write_out_har(self, url, timestamp, category, intent, ml_type, **kwargs):

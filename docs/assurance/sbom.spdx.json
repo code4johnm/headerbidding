@@ -1,0 +1,77 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "headerbidding-auction",
+  "documentNamespace": "https://github.com/code4johnm/headerbidding/assurance/sbom-1.4.0-hb",
+  "creationInfo": {
+    "created": "2026-11-04T17:30:00Z",
+    "creators": [
+      "Tool: headerbidding-assurance"
+    ]
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-headerbidding",
+      "name": "headerbidding-auction",
+      "versionInfo": "1.4.0-hb",
+      "downloadLocation": "git+ssh://git@github.com/code4johnm/headerbidding.git",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MPL-2.0",
+      "licenseDeclared": "MPL-2.0",
+      "copyrightText": "NOASSERTION",
+      "description": "hb/auction.py uses the Python standard library only."
+    },
+    {
+      "SPDXID": "SPDXRef-pytest",
+      "name": "pytest",
+      "versionInfo": "9.1.1",
+      "downloadLocation": "https://pypi.org/project/pytest/9.1.1/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:pypi/pytest@9.1.1"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-dataclasses-json",
+      "name": "dataclasses-json",
+      "versionInfo": "0.6.7",
+      "downloadLocation": "https://pypi.org/project/dataclasses-json/0.6.7/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:pypi/dataclasses-json@0.6.7"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relatedSpdxElement": "SPDXRef-headerbidding",
+      "relationshipType": "DESCRIBES"
+    },
+    {
+      "spdxElementId": "SPDXRef-headerbidding",
+      "relatedSpdxElement": "SPDXRef-pytest",
+      "relationshipType": "DEV_DEPENDENCY_OF"
+    },
+    {
+      "spdxElementId": "SPDXRef-headerbidding",
+      "relatedSpdxElement": "SPDXRef-dataclasses-json",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF"
+    }
+  ]
+}

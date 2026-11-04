@@ -1,0 +1,46 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-11-04T17:30:00Z",
+    "component": {
+      "type": "application",
+      "name": "headerbidding",
+      "version": "1.4.0-hb",
+      "description": "In-process header-bidding auction plus OpenWPM measurement hooks. Auction runtime dependencies are the Python standard library."
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "name": "headerbidding-auction",
+      "version": "1.4.0-hb",
+      "scope": "required",
+      "description": "hb/auction.py. Python standard library only.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MPL-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pytest",
+      "version": "9.1.1",
+      "scope": "optional",
+      "purl": "pkg:pypi/pytest@9.1.1",
+      "description": "Development test runner pinned in requirements-auction.txt. Not imported by the auction."
+    },
+    {
+      "type": "library",
+      "name": "dataclasses-json",
+      "version": "0.6.7",
+      "scope": "optional",
+      "purl": "pkg:pypi/dataclasses-json@0.6.7",
+      "description": "Required by the OpenWPM BrowserParams path. Not imported by hb/auction.py."
+    }
+  ]
+}

@@ -1,3 +1,14 @@
+2026-11-04 - auction path and ownership note
+======
+
+The maintained remote is git@github.com:code4johnm/headerbidding.git on branch master. CODEOWNERS names @code4johnm. That remote was already the code4johnm repository before this change. It was not an empty tree waiting for a first push.
+
+The checkout at /mnt/5TB/git/headerbidding still tracks https://github.com/jmcook1982/headerbidding.git at 18871725aa3315775022b88e3c9362fc45dd1cc4. That history belongs to the account John M. Cook published as jmcook1982. Transferring that GitHub repository onto the name code4johnm/headerbidding is not possible from the code4johnm credentials: the name is already this repository, and the source account is a different login. The old checkout was not retargeted and was not force-pushed.
+
+The demo no longer imports the removed automation package. python3 demo.py runs the in-process auction. ScriptUtils writes bid JSON with indent 4 and creates missing result files instead of raising TypeError or retrying a missing lock file for a minute.
+
+OpenWPM-1776 reads Prebid on each visit and selects training, testing, and baseline profiles from its dashboard.
+
 v0.9.0 - under development
 ======
 

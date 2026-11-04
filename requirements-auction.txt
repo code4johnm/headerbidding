@@ -1,0 +1,2 @@
+# Auction tests. The auction module itself is the Python 3 standard library.
+pytest==9.1.1

@@ -1,0 +1,17 @@
+name: Auction
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  auction:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-auction.txt
+      - run: python -m pytest test/test_hb_auction.py test/test_script_utils_bids.py -q
+      - run: python demo.py --headless

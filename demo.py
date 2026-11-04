@@ -1,44 +1,60 @@
-from six.moves import range
+#!/usr/bin/env python3
+"""Run the header-bidding auction without a browser.
 
-from automation import CommandSequence, TaskManager
+The previous demo imported ``automation`` and called
+``TaskManager.load_default_params``. This tree's measurement stack is the
+``openwpm`` package, and ``TaskManager`` now requires dataclass configs plus
+a storage provider. That import failed before any bid was sent.
 
-# The list of sites that we wish to crawl
-NUM_BROWSERS = 3
-sites = ['http://www.example.com',
-         'http://www.princeton.edu',
-         'http://citp.princeton.edu/']
+    python3 demo.py
+    python3 -m pytest test/test_hb_auction.py test/test_script_utils_bids.py -q
 
-# Loads the manager preference and 3 copies of the default browser dictionaries
-manager_params, browser_params = TaskManager.load_default_params(NUM_BROWSERS)
+A live crawl still belongs to OpenWPM's TaskManager and is not started here.
+"""
 
-# Update browser configuration (use this for per-browser settings)
-for i in range(NUM_BROWSERS):
-    # Record HTTP Requests and Responses
-    browser_params[i]['http_instrument'] = True
-    # Flash is obsolete and disabled by default in modern OpenWPM
-    # browser_params[i]['disable_flash'] = False   # no longer relevant
-browser_params[0]['headless'] = True  # Launch only browser 0 headless
+from __future__ import annotations
 
-# Update TaskManager configuration (use this for crawl-wide settings)
-manager_params['data_directory'] = '~/Desktop/'
-manager_params['log_directory'] = '~/Desktop/'
+import argparse
+import json
+import sys
 
-# Instantiates the measurement platform
-# Commands time out by default after 60 seconds
-manager = TaskManager.TaskManager(manager_params, browser_params)
+from hb.auction import demo_auction, result_document
 
-# Visits the sites with all browsers simultaneously
-for site in sites:
-    command_sequence = CommandSequence.CommandSequence(site)
 
-    # Start by visiting the page
-    command_sequence.get(sleep=0, timeout=60)
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Run the local header-bidding auction."
+    )
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Accepted so the existing CI demo job can call this command. No browser is started.",
+    )
+    parser.parse_args()
+    result = demo_auction()
+    document = result_document(result)
+    stages = [
+        "bid_request",
+        "adapter_response",
+        "auction_cleared",
+        "win_notice",
+        "impression",
+    ]
+    print("header bidding auction {0}".format(document["request_id"]))
+    for stage in stages:
+        rows = [event for event in document["events"] if event["kind"] == stage]
+        print("{0}: {1}".format(stage, len(rows)))
+        for event in rows:
+            print(
+                "  {0} {1}".format(
+                    event["bidder"] or "-", json.dumps(event["detail"], sort_keys=True)
+                )
+            )
+    if document["winner"] != "rubicon" or document["clearing_cpm"] != 1.80:
+        print("unexpected clearing result", file=sys.stderr)
+        return 1
+    return 0
 
-    # dump_profile_cookies/dump_flash_cookies closes the current tab.
-    command_sequence.dump_profile_cookies(120)
 
-    # index='**' synchronizes visits between the three browsers
-    manager.execute_command_sequence(command_sequence, index='**')
-
-# Shuts down the browsers and waits for the data to finish logging
-manager.close()
+if __name__ == "__main__":
+    raise SystemExit(main())
