@@ -34,9 +34,8 @@ Dashboard routes:
 
 | Method and path | Behavior |
 | --- | --- |
-| `GET /api/profiles` | Profile presets and the comparison rows |
-| `GET /api/export.json` | Fixture dataset |
-| `GET /api/export.csv` | Same rows, CSV |
-| `POST /api/settings` | Saves crawl settings, including the selected profile |
+| `GET /` | Auction page. It does not launch Firefox. |
+| `GET /api/status` | Firefox binary presence, crawl `not-started`, and the last auction document |
+| `POST /api/auction` | Clears one local auction. `{"demo": true}` is `demo_auction()`. Any other object sets `price_rule`, the `BidRequest` fields, and optional local adapters |
 
-Profile names are `training`, `testing`, and `baseline`.
+Adapter rows accept `name`, `status` (`bid`, `no-bid`, `timeout`, `error`), `cpm`, `ms`, and `currency`. The response is `result_document` plus the request fields: responses, events, pbjs records, clearing CPM, error rate, and elapsed time. No adapter is contacted over the network.

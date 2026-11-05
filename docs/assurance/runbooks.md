@@ -16,7 +16,7 @@ Auction: the pytest output and the demo's five stage lines.
 
 Crawl: dashboard log panel, `datadir/crawl-status.json`, and `datadir/hb-events.jsonl`. A line with `source: absent` means the page did not expose Prebid. A line with `error_rate` 1.0 means the command threw. That does not stop the rest of the visit list.
 
-Profile table: `GET /api/profiles`. The testing row should show no winner and a non-zero error rate. The training winner is `rubicon`. The baseline winner is `appnexus`. If those change, the fixture adapters changed.
+Auction page: `POST /api/auction`. `{"demo": true}` clears rubicon at CPM 1.80. A second-price run of those same adapters clears at 1.21. If those change, the demo adapters changed.
 
 ## Incident
 

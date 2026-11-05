@@ -24,6 +24,12 @@
     border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px 16px; margin-top: 12px;
   }
   .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
+  label { display: grid; gap: 4px; color: var(--muted); font-size: 13px; font-weight: 700; }
+  input, select {
+    font: inherit; color: var(--text); background: #000;
+    border: 1px solid #536471; border-radius: 10px; min-height: 44px; padding: 8px 10px;
+  }
   button {
     font: inherit; color: var(--text); background: transparent;
     border: 1px solid #536471; border-radius: 999px; min-height: 44px; padding: 8px 14px;
@@ -31,42 +37,127 @@
   }
   button.primary { background: #eff3f4; color: #0f1419; border-color: transparent; }
   button:disabled { opacity: 0.45; cursor: default; }
-  button:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-  th, td { text-align: left; padding: 8px 6px; border-top: 1px solid var(--line); }
+  th, td { text-align: left; padding: 8px 6px; border-top: 1px solid var(--line); vertical-align: top; }
   th { color: var(--muted); font-weight: 700; }
   .err { color: var(--bad); margin-top: 8px; }
   .ok { color: var(--ok); font-weight: 700; }
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  pre {
+    margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere;
+    font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .adapter {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 10px;
+  }
+  .adapter .grid { margin-top: 0; }
   #announce { position: absolute; left: -9999px; }
   @media (max-width: 720px) {
-    body { padding: 12px 12px 40px; }
-    h1 { font-size: 20px; }
-    th, td { padding: 10px 8px; }
+    body { padding: 12px 12px 40px; font-size: 16px; }
+    h1 { font-size: 22px; }
+    p, .sub { font-size: 16px; line-height: 1.45; }
+    .row button { flex: 1 1 140px; }
+    table, thead, tbody, tr { display: block; width: 100%; }
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    tr {
+      margin: 0 0 12px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    td {
+      display: grid;
+      grid-template-columns: 6.5rem minmax(0, 1fr);
+      gap: 4px 8px;
+      border: 0;
+      padding: 6px 0;
+      word-break: break-word;
+    }
+    td::before {
+      content: attr(data-label);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
   }
 </style>
 </head>
 <body>
 <header>
   <h1>Header bidding</h1>
-  <p class="sub" id="where">In-process auction. This page does not launch Firefox and does not visit a publisher site.</p>
+  <p class="sub" id="where">In-process auction. This page does not launch Firefox and does not visit a publisher site. Adapters are local functions. No bid request leaves this machine.</p>
 </header>
 <p id="announce" aria-live="polite"></p>
 
 <section>
+  <h2>Bid request</h2>
+  <p class="sub">Same fields as <code>BidRequest</code>. Price rule is <code>first</code> or <code>second</code>. Second price is the runner-up CPM plus one cent, and it never exceeds the winner.</p>
+  <div class="grid">
+    <label>Request id <input id="request_id" value="demo-1" autocomplete="off"></label>
+    <label>Ad unit <input id="ad_unit" value="/demo/homepage/leaderboard" autocomplete="off"></label>
+    <label>Sizes <input id="sizes" value="728x90, 300x250" autocomplete="off"></label>
+    <label>Timeout ms <input id="timeout_ms" type="number" min="1" max="60000" value="200"></label>
+    <label>Currency <input id="currency" value="USD" maxlength="3" autocomplete="off"></label>
+    <label>Floor CPM <input id="floor_cpm" type="number" min="0" step="0.01" value="0.5"></label>
+    <label>Price rule
+      <select id="price_rule">
+        <option value="first" selected>first</option>
+        <option value="second">second</option>
+      </select>
+    </label>
+  </div>
+</section>
+
+<section>
   <div class="row" style="justify-content: space-between;">
-    <h2>Auction</h2>
-    <button type="button" class="primary" id="run">Run auction</button>
+    <h2>Adapters</h2>
+    <div class="row">
+      <button type="button" id="demo">Run demo</button>
+      <button type="button" class="primary" id="run">Run auction</button>
+    </div>
+  </div>
+  <p class="sub">The demo set is appnexus 1.20, rubicon 1.80, ix timeout, and pubmatic no-bid. Each card is one local adapter: name, status, CPM, response time, currency, size, ad id, and message. Timeout and error raise inside the process. A bid slower than the timeout is dropped. Win and impression URLs are filled by the auction.</p>
+  <div id="adapters"></div>
+  <div class="row" style="margin-top: 10px;">
+    <button type="button" id="add">Add adapter</button>
   </div>
   <p class="sub" id="summary">No auction yet.</p>
   <p class="err" id="error" hidden></p>
+</section>
+
+<section>
+  <h2>Responses</h2>
   <div class="table-scroll">
-  <table>
-    <thead>
-      <tr><th>Bidder</th><th>Status</th><th>CPM</th><th>ms</th></tr>
-    </thead>
-    <tbody id="bids"></tbody>
-  </table>
+    <table>
+      <thead>
+        <tr><th>Bidder</th><th>Status</th><th>CPM</th><th>ms</th><th>Currency</th><th>Size</th><th>Ad id</th><th>Notice</th><th>Message</th></tr>
+      </thead>
+      <tbody id="bids"></tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Events</h2>
+  <p class="sub">bid request, one adapter response each, auction cleared, then the winner's win notice and impression.</p>
+  <pre id="events">No events yet.</pre>
+</section>
+
+<section>
+  <h2>Prebid records</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>Bidder</th><th>Ad id</th><th>CPM</th><th>Time</th><th>Rendered</th><th>Clearing</th><th>Message</th></tr>
+      </thead>
+      <tbody id="pbjs"></tbody>
+    </table>
   </div>
 </section>
 
@@ -77,34 +168,185 @@
 
 <script>
 (function () {
+  var demoButton = document.getElementById("demo");
   var run = document.getElementById("run");
   var summary = document.getElementById("summary");
   var error = document.getElementById("error");
   var bids = document.getElementById("bids");
+  var events = document.getElementById("events");
+  var pbjs = document.getElementById("pbjs");
   var stack = document.getElementById("stack");
   var announce = document.getElementById("announce");
+  var adapterBody = document.getElementById("adapters");
+  var addButton = document.getElementById("add");
+  var defaults = [
+    { name: "appnexus", status: "bid", cpm: 1.2, ms: 40, currency: "USD", width: 300, height: 250, ad_id: "apn-1", message: "Bid available" },
+    { name: "rubicon", status: "bid", cpm: 1.8, ms: 55, currency: "USD", width: 300, height: 250, ad_id: "rub-1", message: "Bid available" },
+    { name: "ix", status: "timeout", cpm: 0, ms: 200, currency: "USD", width: 0, height: 0, ad_id: "", message: "" },
+    { name: "pubmatic", status: "no-bid", cpm: 0, ms: 30, currency: "USD", width: 300, height: 250, ad_id: "pub-1", message: "no-bid" }
+  ];
+
+  function el(tag, attrs) {
+    var node = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (key) {
+      if (key === "value") node.value = attrs[key];
+      else node[key] = attrs[key];
+    });
+    return node;
+  }
 
   function cell(text) {
-    var td = document.createElement("td");
-    td.textContent = text;
-    return td;
+    return el("td", { textContent: text == null ? "" : String(text) });
   }
+
+  function field(label, node) {
+    var wrap = el("label", { textContent: label });
+    wrap.append(node);
+    return wrap;
+  }
+
+  function textInput(value) {
+    return el("input", { value: value == null ? "" : String(value), autocomplete: "off" });
+  }
+
+  function numberInput(value) {
+    return el("input", { value: value == null ? "" : String(value), type: "number", step: "any" });
+  }
+
+  function statusSelect(value) {
+    var select = el("select", {});
+    ["bid", "no-bid", "timeout", "error"].forEach(function (name) {
+      var option = el("option", { value: name, textContent: name });
+      if (name === value) option.selected = true;
+      select.append(option);
+    });
+    return select;
+  }
+
+  function addAdapter(row) {
+    if (adapterBody.children.length >= 12) return;
+    var card = el("article", { className: "adapter" });
+    var grid = el("div", { className: "grid" });
+    grid.append(field("Name", textInput(row.name)));
+    grid.append(field("Status", statusSelect(row.status)));
+    grid.append(field("CPM", numberInput(row.cpm)));
+    grid.append(field("ms", numberInput(row.ms)));
+    grid.append(field("Currency", textInput(row.currency || "USD")));
+    grid.append(field("Width", numberInput(row.width)));
+    grid.append(field("Height", numberInput(row.height)));
+    grid.append(field("Ad id", textInput(row.ad_id)));
+    grid.append(field("Message", textInput(row.message)));
+    var remove = el("button", { type: "button", textContent: "Remove" });
+    remove.addEventListener("click", function () {
+      if (adapterBody.children.length <= 1) return;
+      card.remove();
+    });
+    card.append(grid, remove);
+    adapterBody.append(card);
+  }
+
+  defaults.forEach(addAdapter);
+  addButton.addEventListener("click", function () {
+    addAdapter({ name: "bidder", status: "bid", cpm: 1, ms: 30, currency: "USD", width: 300, height: 250, ad_id: "", message: "" });
+  });
 
   function showError(message) {
     error.hidden = !message;
     error.textContent = message || "";
   }
 
+  function parseSizes(text) {
+    var sizes = [];
+    String(text || "").split(",").forEach(function (part) {
+      var bits = part.toLowerCase().split("x");
+      if (bits.length !== 2) return;
+      var width = parseInt(bits[0], 10);
+      var height = parseInt(bits[1], 10);
+      if (width > 0 && height > 0) sizes.push([width, height]);
+    });
+    return sizes;
+  }
+
+  function whole(value) {
+    var number = parseInt(value, 10);
+    return Number.isFinite(number) ? number : 0;
+  }
+
+  function adapterRows() {
+    return Array.prototype.map.call(adapterBody.querySelectorAll(".adapter"), function (card) {
+      var fields = card.querySelectorAll("input, select");
+      return {
+        name: fields[0].value.trim(),
+        status: fields[1].value,
+        cpm: Number(fields[2].value),
+        ms: whole(fields[3].value),
+        currency: fields[4].value.trim().toUpperCase(),
+        width: whole(fields[5].value),
+        height: whole(fields[6].value),
+        ad_id: fields[7].value.trim(),
+        message: fields[8].value.trim()
+      };
+    });
+  }
+
+  function specFromForm() {
+    return {
+      request_id: document.getElementById("request_id").value.trim(),
+      ad_unit: document.getElementById("ad_unit").value.trim(),
+      sizes: parseSizes(document.getElementById("sizes").value),
+      timeout_ms: whole(document.getElementById("timeout_ms").value),
+      currency: document.getElementById("currency").value.trim().toUpperCase(),
+      floor_cpm: Number(document.getElementById("floor_cpm").value),
+      price_rule: document.getElementById("price_rule").value,
+      adapters: adapterRows()
+    };
+  }
+
   function paint(document_) {
     var winner = document_.winner || "none";
-    var cpm = document_.clearing_cpm;
-    summary.textContent = "Winner " + winner + " at " + cpm + " " + (document_.price_rule || "") + ". Request " + (document_.request_id || "") + ".";
+    var request = document_.request || {};
+    summary.textContent = "Winner " + winner
+      + " at " + document_.clearing_cpm
+      + " " + (document_.price_rule || "")
+      + ". Error rate " + document_.error_rate
+      + ". Elapsed " + document_.elapsed_ms + " ms. Floor " + request.floor_cpm
+      + " " + (request.currency || "")
+      + ". Request " + (document_.request_id || "") + ".";
     summary.className = "ok";
     bids.replaceChildren();
     (document_.responses || []).forEach(function (bid) {
       var tr = document.createElement("tr");
-      tr.append(cell(bid.bidder || ""), cell(bid.status || ""), cell(String(bid.cpm)), cell(String(bid.time_to_respond_ms)));
+      var size = (bid.width || bid.height) ? (bid.width + "x" + bid.height) : "";
+      var notice = [bid.nurl, bid.burl].filter(Boolean).join(" ");
+      var values = [
+        ["Bidder", bid.bidder], ["Status", bid.status], ["CPM", bid.cpm],
+        ["ms", bid.time_to_respond_ms], ["Currency", bid.currency], ["Size", size],
+        ["Ad id", bid.ad_id], ["Notice", notice], ["Message", bid.message]
+      ];
+      values.forEach(function (pair) {
+        var td = cell(pair[1]);
+        td.setAttribute("data-label", pair[0]);
+        tr.append(td);
+      });
       bids.append(tr);
+    });
+    var lines = (document_.events || []).map(function (event) {
+      return event.kind + " " + (event.bidder || "-") + " " + JSON.stringify(event.detail);
+    });
+    events.textContent = lines.length ? lines.join("\n") : "No events.";
+    pbjs.replaceChildren();
+    (document_.pbjs || []).forEach(function (row) {
+      var tr = document.createElement("tr");
+      [
+        ["Bidder", row.bidder], ["Ad id", row.adId], ["CPM", row.cpm],
+        ["Time", row.time], ["Rendered", row.rendered], ["Clearing", row.clearingCpm],
+        ["Message", row.msg]
+      ].forEach(function (pair) {
+        var td = cell(pair[1]);
+        td.setAttribute("data-label", pair[0]);
+        tr.append(td);
+      });
+      pbjs.append(tr);
     });
     announce.textContent = summary.textContent;
   }
@@ -123,10 +365,14 @@
     });
   }
 
-  run.addEventListener("click", function () {
-    run.disabled = true;
+  function post(payload, busy) {
+    busy.disabled = true;
     showError("");
-    fetch("/api/auction", { method: "POST" }).then(function (response) {
+    fetch("/api/auction", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function (response) {
       return response.json().then(function (body) {
         if (!response.ok) throw new Error(body.error || ("auction " + response.status));
         return body;
@@ -137,10 +383,12 @@
       showError(err.message || "Auction failed.");
       announce.textContent = "Auction failed.";
     }).then(function () {
-      run.disabled = false;
+      busy.disabled = false;
     });
-  });
+  }
 
+  demoButton.addEventListener("click", function () { post({ demo: true }, demoButton); });
+  run.addEventListener("click", function () { post(specFromForm(), run); });
   loadStatus();
 })();
 </script>
