@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Header bidding</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M8 22V10M8 10h10l-2 4 2 4H8' fill='none' stroke='%231d9bf0' stroke-width='1.8'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #000; --text: #e7e9ea; --muted: #71767b; --line: #2f3336;
+    --accent: #1d9bf0; --bad: #f4212e; --ok: #00ba7c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body { max-width: 1100px; margin: 0 auto; padding: 16px 16px 48px; }
+  h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  h2 { margin: 0; font-size: 20px; font-weight: 800; }
+  p { margin: 0; color: var(--muted); }
+  header { margin-bottom: 16px; }
+  .sub { margin-top: 4px; }
+  section {
+    border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px 16px; margin-top: 12px;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  button {
+    font: inherit; color: var(--text); background: transparent;
+    border: 1px solid #536471; border-radius: 999px; min-height: 44px; padding: 8px 14px;
+    font-weight: 700; cursor: pointer;
+  }
+  button.primary { background: #eff3f4; color: #0f1419; border-color: transparent; }
+  button:disabled { opacity: 0.45; cursor: default; }
+  button:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  th, td { text-align: left; padding: 8px 6px; border-top: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 700; }
+  .err { color: var(--bad); margin-top: 8px; }
+  .ok { color: var(--ok); font-weight: 700; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  #announce { position: absolute; left: -9999px; }
+  @media (max-width: 720px) {
+    body { padding: 12px 12px 40px; }
+    h1 { font-size: 20px; }
+    th, td { padding: 10px 8px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Header bidding</h1>
+  <p class="sub" id="where">In-process auction. This page does not launch Firefox and does not visit a publisher site.</p>
+</header>
+<p id="announce" aria-live="polite"></p>
+
+<section>
+  <div class="row" style="justify-content: space-between;">
+    <h2>Auction</h2>
+    <button type="button" class="primary" id="run">Run auction</button>
+  </div>
+  <p class="sub" id="summary">No auction yet.</p>
+  <p class="err" id="error" hidden></p>
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr><th>Bidder</th><th>Status</th><th>CPM</th><th>ms</th></tr>
+    </thead>
+    <tbody id="bids"></tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Measurement stack</h2>
+  <p class="sub" id="stack">Checking the Firefox binary.</p>
+</section>
+
+<script>
+(function () {
+  var run = document.getElementById("run");
+  var summary = document.getElementById("summary");
+  var error = document.getElementById("error");
+  var bids = document.getElementById("bids");
+  var stack = document.getElementById("stack");
+  var announce = document.getElementById("announce");
+
+  function cell(text) {
+    var td = document.createElement("td");
+    td.textContent = text;
+    return td;
+  }
+
+  function showError(message) {
+    error.hidden = !message;
+    error.textContent = message || "";
+  }
+
+  function paint(document_) {
+    var winner = document_.winner || "none";
+    var cpm = document_.clearing_cpm;
+    summary.textContent = "Winner " + winner + " at " + cpm + " " + (document_.price_rule || "") + ". Request " + (document_.request_id || "") + ".";
+    summary.className = "ok";
+    bids.replaceChildren();
+    (document_.responses || []).forEach(function (bid) {
+      var tr = document.createElement("tr");
+      tr.append(cell(bid.bidder || ""), cell(bid.status || ""), cell(String(bid.cpm)), cell(String(bid.time_to_respond_ms)));
+      bids.append(tr);
+    });
+    announce.textContent = summary.textContent;
+  }
+
+  function loadStatus() {
+    fetch("/api/status").then(function (response) {
+      if (!response.ok) throw new Error("status " + response.status);
+      return response.json();
+    }).then(function (body) {
+      stack.textContent = body.firefox_binary
+        ? "Firefox 150 binary is on this machine. A crawl is not started from this page."
+        : "Firefox binary is not in firefox-bin. A crawl is not started from this page.";
+      if (body.last) paint(body.last);
+    }).catch(function () {
+      stack.textContent = "Status could not be read.";
+    });
+  }
+
+  run.addEventListener("click", function () {
+    run.disabled = true;
+    showError("");
+    fetch("/api/auction", { method: "POST" }).then(function (response) {
+      return response.json().then(function (body) {
+        if (!response.ok) throw new Error(body.error || ("auction " + response.status));
+        return body;
+      });
+    }).then(function (body) {
+      paint(body);
+    }).catch(function (err) {
+      showError(err.message || "Auction failed.");
+      announce.textContent = "Auction failed.";
+    }).then(function () {
+      run.disabled = false;
+    });
+  });
+
+  loadStatus();
+})();
+</script>
+</body>
+</html>
