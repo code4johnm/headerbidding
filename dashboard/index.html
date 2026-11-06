@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Header bidding</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M8 22V10M8 10h10l-2 4 2 4H8' fill='none' stroke='%231d9bf0' stroke-width='1.8'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%20shape-rendering%3D%27crispEdges%27%3E%3Cpath%20fill%3D%27%23071018%27%20d%3D%27M0%200h16v16H0z%27%2F%3E%3Cpath%20fill%3D%27%231d9bf0%27%20d%3D%27M4%202h7v1H4zM4%203h1v1H4zM10%203h1v1H10zM4%204h7v1H4zM6%205h2v1H6zM6%206h2v1H6zM6%207h2v1H6zM6%208h2v1H6zM6%209h2v1H6zM3%2012h10v1H3z%27%2F%3E%3Cpath%20fill%3D%27%23d7f1ff%27%20d%3D%27M5%203h5v1H5z%27%2F%3E%3Cpath%20fill%3D%27%23083048%27%20d%3D%27M2%2011h12v1H2zM2%2012h1v1H2zM13%2012h1v1H13zM2%2013h12v1H2z%27%2F%3E%3C%2Fsvg%3E">
 <style>
   :root {
     --bg: #000; --text: #e7e9ea; --muted: #71767b; --line: #2f3336;
@@ -19,6 +19,8 @@
   h2 { margin: 0; font-size: 20px; font-weight: 800; }
   p { margin: 0; color: var(--muted); }
   header { margin-bottom: 16px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo { width: 32px; height: 32px; flex: none; display: block; shape-rendering: crispEdges; }
   .sub { margin-top: 4px; }
   section {
     border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px 16px; margin-top: 12px;
@@ -90,8 +92,13 @@
 </head>
 <body>
 <header>
+  <div class="brand">
+    <svg class='logo' aria-hidden='true' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path fill='#071018' d='M0 0h16v16H0z'/><path fill='#1d9bf0' d='M4 2h7v1H4zM4 3h1v1H4zM10 3h1v1H10zM4 4h7v1H4zM6 5h2v1H6zM6 6h2v1H6zM6 7h2v1H6zM6 8h2v1H6zM6 9h2v1H6zM3 12h10v1H3z'/><path fill='#d7f1ff' d='M5 3h5v1H5z'/><path fill='#083048' d='M2 11h12v1H2zM2 12h1v1H2zM13 12h1v1H13zM2 13h12v1H2z'/></svg>
+    <div>
   <h1>Header bidding</h1>
   <p class="sub" id="where">In-process auction. This page does not launch Firefox and does not visit a publisher site. Adapters are local functions. No bid request leaves this machine.</p>
+    </div>
+  </div>
 </header>
 <p id="announce" aria-live="polite"></p>
 
